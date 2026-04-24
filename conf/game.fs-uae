@@ -1,0 +1,13 @@
+[fs-uae]
+amiga_model = A500
+kickstart_file = ~/Amiga/kickstarts/Amiga Kickstart 1.3 (34.5) (A500-A2500-A3000-CDTV) (Commodore) (1987).rom
+hard_drive_0 = ~/Amiga/work
+hard_drive_0_label = Work
+hard_drive_0_bootable = 1
+floppy_drive_0_sounds = off
+chip_memory = 512
+fast_memory = 0
+window_width = 1116
+window_height = 860
+joystick_port_0 = mouse
+joystick_port_1 = nothing
