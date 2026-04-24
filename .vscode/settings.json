@@ -2,5 +2,5 @@
     "[m68k]": {
         "editor.rulers": []
     },
-    "amiga.program": "build/game.elf"
+    "amiga.program": "build/game"
 }
