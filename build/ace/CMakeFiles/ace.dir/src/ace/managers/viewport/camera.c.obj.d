@@ -1,0 +1,35 @@
+ace/CMakeFiles/ace.dir/src/ace/managers/viewport/camera.c.obj: \
+ /Users/kwnuk/Amiga/ACE/src/ace/managers/viewport/camera.c \
+ /Users/kwnuk/Amiga/ACE/include/ace/managers/viewport/camera.h \
+ /Users/kwnuk/Amiga/ACE/include/ace/types.h \
+ /Users/kwnuk/.vscode/extensions/bartmanabyss.amiga-debug-1.7.9/bin/darwin/opt/m68k-amiga-elf/sys-include/exec/types.h \
+ /Users/kwnuk/Amiga/ACE/include/ace/utils/extview.h \
+ /Users/kwnuk/Amiga/ACE/include/ace/utils/tag.h \
+ /Users/kwnuk/.vscode/extensions/bartmanabyss.amiga-debug-1.7.9/bin/darwin/opt/lib/gcc/m68k-amiga-elf/14.2.0/include/stdarg.h \
+ /Users/kwnuk/Amiga/ACE/include/ace/managers/log.h \
+ /Users/kwnuk/Amiga/ACE/include/mini_std/string.h \
+ /Users/kwnuk/.vscode/extensions/bartmanabyss.amiga-debug-1.7.9/bin/darwin/opt/lib/gcc/m68k-amiga-elf/14.2.0/include/stddef.h \
+ /Users/kwnuk/.vscode/extensions/bartmanabyss.amiga-debug-1.7.9/bin/darwin/opt/m68k-amiga-elf/sys-include/string.h \
+ /Users/kwnuk/Amiga/ACE/include/ace/managers/timer.h \
+ /Users/kwnuk/.vscode/extensions/bartmanabyss.amiga-debug-1.7.9/bin/darwin/opt/m68k-amiga-elf/sys-include/clib/exec_protos.h \
+ /Users/kwnuk/.vscode/extensions/bartmanabyss.amiga-debug-1.7.9/bin/darwin/opt/m68k-amiga-elf/sys-include/exec/tasks.h \
+ /Users/kwnuk/.vscode/extensions/bartmanabyss.amiga-debug-1.7.9/bin/darwin/opt/m68k-amiga-elf/sys-include/exec/nodes.h \
+ /Users/kwnuk/.vscode/extensions/bartmanabyss.amiga-debug-1.7.9/bin/darwin/opt/m68k-amiga-elf/sys-include/exec/lists.h \
+ /Users/kwnuk/.vscode/extensions/bartmanabyss.amiga-debug-1.7.9/bin/darwin/opt/m68k-amiga-elf/sys-include/exec/memory.h \
+ /Users/kwnuk/.vscode/extensions/bartmanabyss.amiga-debug-1.7.9/bin/darwin/opt/m68k-amiga-elf/sys-include/exec/ports.h \
+ /Users/kwnuk/.vscode/extensions/bartmanabyss.amiga-debug-1.7.9/bin/darwin/opt/m68k-amiga-elf/sys-include/exec/devices.h \
+ /Users/kwnuk/.vscode/extensions/bartmanabyss.amiga-debug-1.7.9/bin/darwin/opt/m68k-amiga-elf/sys-include/exec/libraries.h \
+ /Users/kwnuk/.vscode/extensions/bartmanabyss.amiga-debug-1.7.9/bin/darwin/opt/m68k-amiga-elf/sys-include/exec/io.h \
+ /Users/kwnuk/.vscode/extensions/bartmanabyss.amiga-debug-1.7.9/bin/darwin/opt/m68k-amiga-elf/sys-include/exec/semaphores.h \
+ /Users/kwnuk/.vscode/extensions/bartmanabyss.amiga-debug-1.7.9/bin/darwin/opt/m68k-amiga-elf/sys-include/exec/avl.h \
+ /Users/kwnuk/.vscode/extensions/bartmanabyss.amiga-debug-1.7.9/bin/darwin/opt/m68k-amiga-elf/sys-include/exec/interrupts.h \
+ /Users/kwnuk/.vscode/extensions/bartmanabyss.amiga-debug-1.7.9/bin/darwin/opt/m68k-amiga-elf/sys-include/hardware/intbits.h \
+ /Users/kwnuk/Amiga/ACE/include/ace/managers/memory.h \
+ /Users/kwnuk/Amiga/ACE/include/ace/utils/custom.h \
+ /Users/kwnuk/Amiga/ACE/include/ace/macros.h \
+ /Users/kwnuk/.vscode/extensions/bartmanabyss.amiga-debug-1.7.9/bin/darwin/opt/m68k-amiga-elf/sys-include/hardware/custom.h \
+ /Users/kwnuk/Amiga/ACE/include/ace/utils/file.h \
+ /Users/kwnuk/Amiga/ACE/include/mini_std/stdio.h \
+ /Users/kwnuk/Amiga/ACE/include/mini_std/printf.h \
+ /Users/kwnuk/Amiga/ACE/include/ace/managers/copper.h \
+ /Users/kwnuk/.vscode/extensions/bartmanabyss.amiga-debug-1.7.9/bin/darwin/opt/m68k-amiga-elf/sys-include/hardware/dmabits.h

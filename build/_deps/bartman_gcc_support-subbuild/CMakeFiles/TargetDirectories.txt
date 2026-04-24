@@ -1,0 +1,3 @@
+/Users/kwnuk/Amiga/ace-scroller/build/_deps/bartman_gcc_support-subbuild/CMakeFiles/bartman_gcc_support-populate.dir
+/Users/kwnuk/Amiga/ace-scroller/build/_deps/bartman_gcc_support-subbuild/CMakeFiles/edit_cache.dir
+/Users/kwnuk/Amiga/ace-scroller/build/_deps/bartman_gcc_support-subbuild/CMakeFiles/rebuild_cache.dir

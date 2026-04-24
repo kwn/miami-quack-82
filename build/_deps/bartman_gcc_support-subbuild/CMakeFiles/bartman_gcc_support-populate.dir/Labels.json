@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/Users/kwnuk/Amiga/ace-scroller/build/_deps/bartman_gcc_support-subbuild/CMakeFiles/bartman_gcc_support-populate"
+		},
+		{
+			"file" : "/Users/kwnuk/Amiga/ace-scroller/build/_deps/bartman_gcc_support-subbuild/CMakeFiles/bartman_gcc_support-populate.rule"
+		},
+		{
+			"file" : "/Users/kwnuk/Amiga/ace-scroller/build/_deps/bartman_gcc_support-subbuild/CMakeFiles/bartman_gcc_support-populate-complete.rule"
+		},
+		{
+			"file" : "/Users/kwnuk/Amiga/ace-scroller/build/_deps/bartman_gcc_support-subbuild/bartman_gcc_support-populate-prefix/src/bartman_gcc_support-populate-stamp/bartman_gcc_support-populate-build.rule"
+		},
+		{
+			"file" : "/Users/kwnuk/Amiga/ace-scroller/build/_deps/bartman_gcc_support-subbuild/bartman_gcc_support-populate-prefix/src/bartman_gcc_support-populate-stamp/bartman_gcc_support-populate-configure.rule"
+		},
+		{
+			"file" : "/Users/kwnuk/Amiga/ace-scroller/build/_deps/bartman_gcc_support-subbuild/bartman_gcc_support-populate-prefix/src/bartman_gcc_support-populate-stamp/bartman_gcc_support-populate-download.rule"
+		},
+		{
+			"file" : "/Users/kwnuk/Amiga/ace-scroller/build/_deps/bartman_gcc_support-subbuild/bartman_gcc_support-populate-prefix/src/bartman_gcc_support-populate-stamp/bartman_gcc_support-populate-install.rule"
+		},
+		{
+			"file" : "/Users/kwnuk/Amiga/ace-scroller/build/_deps/bartman_gcc_support-subbuild/bartman_gcc_support-populate-prefix/src/bartman_gcc_support-populate-stamp/bartman_gcc_support-populate-mkdir.rule"
+		},
+		{
+			"file" : "/Users/kwnuk/Amiga/ace-scroller/build/_deps/bartman_gcc_support-subbuild/bartman_gcc_support-populate-prefix/src/bartman_gcc_support-populate-stamp/bartman_gcc_support-populate-patch.rule"
+		},
+		{
+			"file" : "/Users/kwnuk/Amiga/ace-scroller/build/_deps/bartman_gcc_support-subbuild/bartman_gcc_support-populate-prefix/src/bartman_gcc_support-populate-stamp/bartman_gcc_support-populate-test.rule"
+		},
+		{
+			"file" : "/Users/kwnuk/Amiga/ace-scroller/build/_deps/bartman_gcc_support-subbuild/bartman_gcc_support-populate-prefix/src/bartman_gcc_support-populate-stamp/bartman_gcc_support-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"bartman_gcc_support-populate"
+		],
+		"name" : "bartman_gcc_support-populate"
+	}
+}
