@@ -3,11 +3,11 @@
  *
  * To replace the scroller with your own game state:
  *   1. Delete scroller.c / scroller.h
- *   2. Create your own state file with gsMyGameCreate/Loop/Destroy
+ *   2. Create your own state file with the three callbacks
  *   3. Replace the stateChange() call below
  */
 
-#undef GENERIC_MAIN_LOG_PATH          /* disable log file in release builds */
+#undef GENERIC_MAIN_LOG_PATH
 #include <ace/generic/main.h>
 #include <ace/managers/key.h>
 #include <ace/managers/state.h>
@@ -15,21 +15,20 @@
 
 #include "scroller.h"
 
-/* ---- global state manager (accessible from all game states) ------------ */
-tStateManager *g_pStateMgr;
+tStateManager *stateMgr;
 
 void genericCreate(void) {
     keyCreate();
-    g_pStateMgr = stateManagerCreate();
-    stateChange(g_pStateMgr, &g_sScrollerState);
+    stateMgr = stateManagerCreate();
+    stateChange(stateMgr, &scrollerState);
 }
 
 void genericProcess(void) {
     keyProcess();
-    stateProcess(g_pStateMgr);
+    stateProcess(stateMgr);
 }
 
 void genericDestroy(void) {
-    stateManagerDestroy(g_pStateMgr);
+    stateManagerDestroy(stateMgr);
     keyDestroy();
 }

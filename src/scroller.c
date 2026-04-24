@@ -3,7 +3,7 @@
  *
  * Map  : 128 × 128 tiles, 16 px each  →  2048 × 2048 pixel world
  * View : 320 × 256 px (PAL lores), 4 bpp (16 colours)
- * Input: arrow keys move camera, ESC exits
+ * Input: arrow keys / WASD move camera, ESC exits
  *
  * Tileset is built at runtime with blitRect – no asset files needed.
  * Five distinct tile types make every map position visually unique so
@@ -21,8 +21,6 @@
 
 /* ------------------------------------------------------------------ sizes */
 
-#define SCREEN_W     320
-#define SCREEN_H     256
 #define BPP            4   /* 16 colours */
 
 #define TILE_SHIFT     4   /* 1 << 4 = 16 px per tile */
@@ -35,20 +33,20 @@
 
 /* ------------------------------------------------------------------ tiles */
 
-#define TILE_GRASS   0   /* green meadow            */
-#define TILE_DIRT    1   /* brown earth             */
-#define TILE_WATER   2   /* blue lake               */
-#define TILE_STONE   3   /* grey rock / wall        */
-#define TILE_SAND    4   /* yellow beach            */
+#define TILE_GRASS   0
+#define TILE_DIRT    1
+#define TILE_WATER   2
+#define TILE_STONE   3
+#define TILE_SAND    4
 #define TILE_COUNT   5
 
 /* ---------------------------------------------------------------- palette
  * 12-bit Amiga OCS colour: 0xRGB
- * Indices 0..4  : tile base colours (one dominant colour per tile)
+ * Indices 0..4  : tile base colours
  * Indices 5..9  : tile highlight / detail colours
- * Indices 10..15: spare / future use
+ * Indices 10..15: spare
  */
-static const UWORD s_pPalette[1 << BPP] = {
+static const UWORD palette[1 << BPP] = {
     /* 0  grass dark  */ 0x0271,
     /* 1  dirt  dark  */ 0x0531,
     /* 2  water dark  */ 0x0027,
@@ -59,32 +57,21 @@ static const UWORD s_pPalette[1 << BPP] = {
     /* 7  water light */ 0x024B,
     /* 8  stone light */ 0x0778,
     /* 9  sand  light */ 0x0EC7,
-    /* 10 black       */ 0x0000,
-    /* 11 dark grey   */ 0x0333,
-    /* 12 mid grey    */ 0x0666,
-    /* 13 light grey  */ 0x0999,
-    /* 14 white       */ 0x0FFF,
-    /* 15 accent red  */ 0x0F22,
+    /* 10..15 spare   */
+    0x0000, 0x0333, 0x0666, 0x0999, 0x0FFF, 0x0F22,
 };
 
 /* ------------------------------------------------------------------ state */
 
-static tView              *s_pView;
-static tVPort             *s_pVPort;
-static tTileBufferManager *s_pTileBuf;
-static tBitMap            *s_pTileSet;
+static tView              *view;
+static tVPort             *vport;
+static tTileBufferManager *tileBuf;
+static tBitMap            *tileSet;
 
-/* --------------------------------------------------------- tileset builder
- *
- * Every tile is TILE_SIZE × TILE_SIZE px and lives at y = index * TILE_SIZE
- * inside the single-column tileset bitmap.
- *
- * Each tile uses two palette colours (dark base + light highlight) so the
- * tiles are distinguishable at a glance.  The highlight is a 2-px stripe or
- * checkerboard-style band – everything done with blitRect.
- */
+/* --------------------------------------------------------- tileset builder */
+
 static void buildTileSet(void) {
-    s_pTileSet = bitmapCreate(
+    tileSet = bitmapCreate(
         TILE_SIZE,
         TILE_SIZE * TILE_COUNT,
         BPP,
@@ -92,32 +79,17 @@ static void buildTileSet(void) {
     );
 
     for (UBYTE t = 0; t < TILE_COUNT; ++t) {
-        UWORD uwBase = TILE_SIZE * t;
-
-        /* fill entire tile with dark base colour (index = t) */
-        blitRect(s_pTileSet, 0, uwBase, TILE_SIZE, TILE_SIZE, t);
-
-        /* add a light 2-px horizontal band 4 px from the top */
-        blitRect(s_pTileSet, 0, uwBase + 4, TILE_SIZE, 2, t + 5);
-
-        /* add a 2-px vertical stripe 4 px from the left – creates a
-         * simple "brick" cross-hatch that makes tile edges visible */
-        blitRect(s_pTileSet, 4, uwBase, 2, TILE_SIZE, t + 5);
+        UWORD base = TILE_SIZE * t;
+        blitRect(tileSet, 0, base,     TILE_SIZE, TILE_SIZE, t);     /* base colour  */
+        blitRect(tileSet, 0, base + 4, TILE_SIZE, 2,         t + 5); /* horiz band   */
+        blitRect(tileSet, 4, base,     2,         TILE_SIZE, t + 5); /* vert stripe  */
     }
 }
 
-/* ----------------------------------------------------------- map generator
- *
- * Pure deterministic noise: combines tile X and Y coordinates with a few
- * prime multipliers so every position looks different without needing
- * a real noise library or random seed.
- *
- * The result is a varied landscape:
- *   - mostly grass, patches of dirt and sand
- *   - occasional water pools and stone outcrops
- */
-static UBYTE tileAt(UWORD uwX, UWORD uwY) {
-    UWORD v = (uwX * 7u + uwY * 13u + (uwX ^ uwY) * 3u) & 0xFFu;
+/* ----------------------------------------------------------- map generator */
+
+static UBYTE tileAt(UWORD x, UWORD y) {
+    UWORD v = (x * 7u + y * 13u + (x ^ y) * 3u) & 0xFFu;
     if      (v < 80)  return TILE_GRASS;
     else if (v < 130) return TILE_DIRT;
     else if (v < 170) return TILE_SAND;
@@ -128,7 +100,7 @@ static UBYTE tileAt(UWORD uwX, UWORD uwY) {
 static void buildMap(void) {
     for (UWORD x = 0; x < MAP_TILES_X; ++x) {
         for (UWORD y = 0; y < MAP_TILES_Y; ++y) {
-            s_pTileBuf->pTileData[x][y] = tileAt(x, y);
+            tileBuf->pTileData[x][y] = tileAt(x, y);
         }
     }
 }
@@ -136,69 +108,68 @@ static void buildMap(void) {
 /* ---------------------------------------------------- ACE state callbacks */
 
 static void scrollerCreate(void) {
-    s_pView = viewCreate(0, TAG_DONE);
+    view = viewCreate(0, TAG_DONE);
 
-    s_pVPort = vPortCreate(0,
-        TAG_VPORT_VIEW, s_pView,
+    vport = vPortCreate(0,
+        TAG_VPORT_VIEW, view,
         TAG_VPORT_BPP,  BPP,
         TAG_DONE
     );
 
     for (UBYTE i = 0; i < (1 << BPP); ++i) {
-        s_pVPort->pPalette[i] = s_pPalette[i];
+        vport->pPalette[i] = palette[i];
     }
 
     buildTileSet();
 
-    s_pTileBuf = tileBufferCreate(0,
-        TAG_TILEBUFFER_VPORT,               s_pVPort,
+    tileBuf = tileBufferCreate(0,
+        TAG_TILEBUFFER_VPORT,               vport,
         TAG_TILEBUFFER_BITMAP_FLAGS,        BMF_CLEAR | BMF_INTERLEAVED,
         TAG_TILEBUFFER_BOUND_TILE_X,        MAP_TILES_X,
         TAG_TILEBUFFER_BOUND_TILE_Y,        MAP_TILES_Y,
         TAG_TILEBUFFER_TILE_SHIFT,          TILE_SHIFT,
-        TAG_TILEBUFFER_TILESET,             s_pTileSet,
+        TAG_TILEBUFFER_TILESET,             tileSet,
         TAG_TILEBUFFER_REDRAW_QUEUE_LENGTH, 100,
         TAG_DONE
     );
 
     buildMap();
-    cameraSetCoord(s_pTileBuf->pCamera, 0, 0);
-    tileBufferRedrawAll(s_pTileBuf);
+    cameraSetCoord(tileBuf->pCamera, 0, 0);
+    tileBufferRedrawAll(tileBuf);
 
-    viewLoad(s_pView);
+    viewLoad(view);
     systemUnuse();
 }
 
 static void scrollerLoop(void) {
-    /* camera movement – arrows OR WASD (arrows may be grabbed by FS-UAE joystick) */
-    WORD wDx = 0, wDy = 0;
-    if (keyCheck(KEY_LEFT)  || keyCheck(KEY_A)) { wDx = -CAM_SPEED; }
-    if (keyCheck(KEY_RIGHT) || keyCheck(KEY_D)) { wDx =  CAM_SPEED;  }
-    if (keyCheck(KEY_UP)    || keyCheck(KEY_W)) { wDy = -CAM_SPEED; }
-    if (keyCheck(KEY_DOWN)  || keyCheck(KEY_S)) { wDy =  CAM_SPEED;  }
+    WORD dx = 0, dy = 0;
+    if (keyCheck(KEY_LEFT)  || keyCheck(KEY_A)) { dx = -CAM_SPEED; }
+    if (keyCheck(KEY_RIGHT) || keyCheck(KEY_D)) { dx =  CAM_SPEED; }
+    if (keyCheck(KEY_UP)    || keyCheck(KEY_W)) { dy = -CAM_SPEED; }
+    if (keyCheck(KEY_DOWN)  || keyCheck(KEY_S)) { dy =  CAM_SPEED; }
 
     if (keyUse(KEY_ESCAPE)) {
         gameExit();
         return;
     }
 
-    cameraMoveBy(s_pTileBuf->pCamera, wDx, wDy);
-    tileBufferProcess(s_pTileBuf);
-    viewProcessManagers(s_pView);
+    cameraMoveBy(tileBuf->pCamera, dx, dy);
+    tileBufferProcess(tileBuf);
+    viewProcessManagers(view);
     copProcessBlocks();
-    vPortWaitForEnd(s_pVPort);
+    vPortWaitForEnd(vport);
 }
 
 static void scrollerDestroy(void) {
     systemUse();
     viewLoad(0);
-    viewDestroy(s_pView);     /* also frees vPort, tileBuf, scrollBuf, camera */
-    bitmapDestroy(s_pTileSet);
+    viewDestroy(view);
+    bitmapDestroy(tileSet);
 }
 
 /* -------------------------------------------------- exported state struct */
 
-tState g_sScrollerState = {
+tState scrollerState = {
     .cbCreate  = scrollerCreate,
     .cbLoop    = scrollerLoop,
     .cbDestroy = scrollerDestroy,
