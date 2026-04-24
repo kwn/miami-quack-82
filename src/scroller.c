@@ -170,12 +170,12 @@ static void scrollerCreate(void) {
 }
 
 static void scrollerLoop(void) {
-    /* camera movement */
+    /* camera movement – arrows OR WASD (arrows may be grabbed by FS-UAE joystick) */
     WORD wDx = 0, wDy = 0;
-    if (keyCheck(KEY_LEFT))  { wDx = -CAM_SPEED; }
-    if (keyCheck(KEY_RIGHT)) { wDx =  CAM_SPEED;  }
-    if (keyCheck(KEY_UP))    { wDy = -CAM_SPEED; }
-    if (keyCheck(KEY_DOWN))  { wDy =  CAM_SPEED;  }
+    if (keyCheck(KEY_LEFT)  || keyCheck(KEY_A)) { wDx = -CAM_SPEED; }
+    if (keyCheck(KEY_RIGHT) || keyCheck(KEY_D)) { wDx =  CAM_SPEED;  }
+    if (keyCheck(KEY_UP)    || keyCheck(KEY_W)) { wDy = -CAM_SPEED; }
+    if (keyCheck(KEY_DOWN)  || keyCheck(KEY_S)) { wDy =  CAM_SPEED;  }
 
     if (keyUse(KEY_ESCAPE)) {
         gameExit();
