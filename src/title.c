@@ -30,6 +30,8 @@ extern tStateManager *stateMgr;
 #define MENU_BOX_H 100
 #define MENU_TEXT_X (MENU_BOX_X + 16)
 #define MENU_TEXT_Y (MENU_BOX_Y + 15)
+#define MENU_TEXT_LOCAL_X (MENU_TEXT_X - MENU_BOX_X)
+#define MENU_TEXT_LOCAL_Y (MENU_TEXT_Y - MENU_BOX_Y)
 #define MENU_TEXT_SPACING 20
 #define MENU_CURSOR_X (MENU_BOX_X + 2)
 #define MENU_CURSOR_Y_OFFSET -1
@@ -268,6 +270,15 @@ static void buildMenuBaseBitmap(void) {
     applyCheckerOverlay(menuBaseBitmap, 0, 0, MENU_BOX_W, MENU_BOX_H);
 }
 
+static void copyMenuDrawToBackBuffer(UWORD srcY, UWORD dstY, UWORD height) {
+    blitCopyAligned(
+        menuDrawBitmap, 0, srcY,
+        buffer->pBack, MENU_BOX_X, dstY,
+        MENU_BOX_W, height
+    );
+    blitWait();
+}
+
 static void drawMenuPageToBuffer(void) {
     const MenuPage *page = getCurrentMenuPage();
 
@@ -275,24 +286,19 @@ static void drawMenuPageToBuffer(void) {
     blitWait();
 
     for (UBYTE i = 0; i < page->itemCount; ++i) {
-        UWORD y = (MENU_TEXT_Y - MENU_BOX_Y) + (i * MENU_TEXT_SPACING);
-        drawText(menuDrawBitmap, MENU_TEXT_X - MENU_BOX_X, y, getMenuItemText(&page->items[i]), COLOR_TEXT);
+        UWORD y = MENU_TEXT_LOCAL_Y + (i * MENU_TEXT_SPACING);
+        drawText(menuDrawBitmap, MENU_TEXT_LOCAL_X, y, getMenuItemText(&page->items[i]), COLOR_TEXT);
     }
 }
 
 static void drawMenuToBackBuffer(void) {
     drawMenuPageToBuffer();
-    blitCopyAligned(
-        menuDrawBitmap, 0, 0,
-        buffer->pBack, MENU_BOX_X, MENU_BOX_Y,
-        MENU_BOX_W, MENU_BOX_H
-    );
-    blitWait();
+    copyMenuDrawToBackBuffer(0, MENU_BOX_Y, MENU_BOX_H);
 }
 
 static void drawMenuRowToBackBuffer(UBYTE row) {
     const MenuPage *page = getCurrentMenuPage();
-    UWORD srcY = (MENU_TEXT_Y - MENU_BOX_Y) + (row * MENU_TEXT_SPACING);
+    UWORD srcY = MENU_TEXT_LOCAL_Y + (row * MENU_TEXT_SPACING);
     UWORD dstY = MENU_TEXT_Y + (row * MENU_TEXT_SPACING);
 
     blitCopyAligned(
@@ -301,16 +307,12 @@ static void drawMenuRowToBackBuffer(UBYTE row) {
         MENU_BOX_W, MENU_TEXT_SPACING
     );
     blitWait();
-    drawText(menuDrawBitmap, MENU_TEXT_X - MENU_BOX_X, srcY, getMenuItemText(&page->items[row]), COLOR_TEXT);
-    blitCopyAligned(
-        menuDrawBitmap, 0, srcY,
-        buffer->pBack, MENU_BOX_X, dstY,
-        MENU_BOX_W, MENU_TEXT_SPACING
-    );
-    blitWait();
+    drawText(menuDrawBitmap, MENU_TEXT_LOCAL_X, srcY, getMenuItemText(&page->items[row]), COLOR_TEXT);
+    copyMenuDrawToBackBuffer(srcY, dstY, MENU_TEXT_SPACING);
 }
 
 static void refreshMenuPage(void) {
+    pendingRowRefresh = 0;
     drawMenuToBackBuffer();
     updateCursorSprite();
     presentBackBuffer();
@@ -352,22 +354,16 @@ static void showMenu(void) {
     drawMenuToBackBuffer();
 }
 
-static void selectPrevious(void) {
+static void moveSelection(BYTE delta) {
     const MenuPage *page = getCurrentMenuPage();
 
-    if (selectedItem == 0) {
-        selectedItem = page->itemCount - 1;
+    if (delta < 0) {
+        selectedItem = (selectedItem == 0) ? page->itemCount - 1 : selectedItem - 1;
     } else {
-        --selectedItem;
-    }
-}
-
-static void selectNext(void) {
-    const MenuPage *page = getCurrentMenuPage();
-
-    ++selectedItem;
-    if (selectedItem >= page->itemCount) {
-        selectedItem = 0;
+        ++selectedItem;
+        if (selectedItem >= page->itemCount) {
+            selectedItem = 0;
+        }
     }
 }
 
@@ -493,10 +489,10 @@ static void titleLoop(void) {
     selectedMenuItem = getSelectedMenuItem();
 
     if (keyUse(KEY_UP) || joyUse(JOY1_UP)) {
-        selectPrevious();
+        moveSelection(-1);
         selectionChanged = 1;
     } else if (keyUse(KEY_DOWN) || joyUse(JOY1_DOWN)) {
-        selectNext();
+        moveSelection(1);
         selectionChanged = 1;
     } else if ((keyUse(KEY_LEFT) || joyUse(JOY1_LEFT)) && selectedMenuItem->kind == MENU_ITEM_OPTION) {
         changeOption(selectedMenuItem, -1);
