@@ -29,6 +29,10 @@ extern tStateManager *stateMgr;
 #define MENU_TEXT_X (MENU_BOX_X + 16)
 #define MENU_TEXT_Y (MENU_BOX_Y + 15)
 #define MENU_TEXT_SPACING 20
+#define MENU_CURSOR_X (MENU_BOX_X + 6)
+#define MENU_CURSOR_RESTORE_X MENU_BOX_X
+#define MENU_CURSOR_RESTORE_W 16
+#define MENU_CURSOR_RESTORE_H 12
 
 #define COLOR_TEXT 29
 #define COLOR_SELECTED 12
@@ -73,16 +77,14 @@ static UWORD pristinePalette[TITLE_COLOR_COUNT];
 
 static TitlePhase phase;
 static UBYTE selectedItem;
-static UBYTE needsRedraw;
 
-static void drawText(UWORD x, UWORD y, const char *text, UBYTE color) {
-    gameFontDrawStr(font, buffer->pBack, textBitmap, x, y, text, color, COLOR_SHADOW);
+static void drawText(tBitMap *dest, UWORD x, UWORD y, const char *text, UBYTE color) {
+    gameFontDrawStr(font, dest, textBitmap, x, y, text, color, COLOR_SHADOW);
 }
 
-static void copyPristinePalette(void) {
-    for (UBYTE i = 0; i < TITLE_COLOR_COUNT; ++i) {
-        vport->pPalette[i] = pristinePalette[i];
-    }
+static void presentBackBuffer(void) {
+    viewProcessManagers(view);
+    copProcessBlocks();
 }
 
 static void setPaletteLevel(UBYTE level) {
@@ -124,21 +126,43 @@ static void applyCheckerOverlay(tBitMap *bitmap, UWORD x, UWORD y, UWORD width, 
     }
 }
 
-static void redrawMenu(void) {
-    blitCopyAligned(titleBitmap, 0, 0, buffer->pBack, 0, 0, SCREEN_W, SCREEN_H);
+static void drawMenuBase(tBitMap *dest) {
+    blitCopyAligned(titleBitmap, 0, 0, dest, 0, 0, SCREEN_W, SCREEN_H);
     blitWait();
-    applyCheckerOverlay(buffer->pBack, MENU_BOX_X, MENU_BOX_Y, MENU_BOX_W, MENU_BOX_H);
+    applyCheckerOverlay(dest, MENU_BOX_X, MENU_BOX_Y, MENU_BOX_W, MENU_BOX_H);
 
     for (UBYTE i = 0; i < MENU_ITEM_COUNT; ++i) {
         UWORD y = MENU_TEXT_Y + (i * MENU_TEXT_SPACING);
-        UBYTE color = (i == selectedItem) ? COLOR_SELECTED : COLOR_TEXT;
-        drawText(MENU_TEXT_X, y, menuItems[i].text, color);
-        if (i == selectedItem) {
-            drawText(MENU_BOX_X + 6, y, ">", color);
-        }
+        drawText(dest, MENU_TEXT_X, y, menuItems[i].text, COLOR_TEXT);
     }
+}
 
-    needsRedraw = 0;
+static void restoreCursorSlots(tBitMap *dest) {
+    for (UBYTE i = 0; i < MENU_ITEM_COUNT; ++i) {
+        UWORD y = MENU_TEXT_Y + (i * MENU_TEXT_SPACING);
+        blitCopyAligned(
+            titleBitmap, MENU_CURSOR_RESTORE_X, y,
+            dest, MENU_CURSOR_RESTORE_X, y,
+            MENU_CURSOR_RESTORE_W, MENU_CURSOR_RESTORE_H
+        );
+        blitWait();
+        applyCheckerOverlay(dest, MENU_CURSOR_RESTORE_X, y, MENU_CURSOR_RESTORE_W, MENU_CURSOR_RESTORE_H);
+    }
+}
+
+static void drawMenuCursor(tBitMap *dest) {
+    UWORD y = MENU_TEXT_Y + (selectedItem * MENU_TEXT_SPACING);
+    drawText(dest, MENU_CURSOR_X, y, ">", COLOR_SELECTED);
+}
+
+static void drawFullMenu(tBitMap *dest) {
+    drawMenuBase(dest);
+    drawMenuCursor(dest);
+}
+
+static void redrawCursor(void) {
+    restoreCursorSlots(buffer->pBack);
+    drawMenuCursor(buffer->pBack);
 }
 
 static void showMenu(void) {
@@ -147,10 +171,11 @@ static void showMenu(void) {
 
     fadePaletteLevel(PALETTE_FULL_LEVEL, MENU_DIM_LEVEL);
 
-    needsRedraw = 1;
-    redrawMenu();
-    viewProcessManagers(view);
-    copProcessBlocks();
+    drawFullMenu(buffer->pBack);
+    presentBackBuffer();
+    vPortWaitForEnd(vport);
+
+    drawFullMenu(buffer->pBack);
 }
 
 static void selectPrevious(void) {
@@ -159,7 +184,6 @@ static void selectPrevious(void) {
     } else {
         --selectedItem;
     }
-    needsRedraw = 1;
 }
 
 static void selectNext(void) {
@@ -167,7 +191,6 @@ static void selectNext(void) {
     if (selectedItem >= MENU_ITEM_COUNT) {
         selectedItem = 0;
     }
-    needsRedraw = 1;
 }
 
 static void activateSelected(void) {
@@ -210,7 +233,6 @@ static void titleCreate(void) {
     );
 
     paletteLoadFromPath("data/title/title.plt", pristinePalette, TITLE_COLOR_COUNT);
-    copyPristinePalette();
     titleBitmap = bitmapCreateFromPath("data/title/title.bm", 0);
     font = fontCreateFromPath("data/fonts/quaver.fnt");
     textBitmap = fontCreateTextBitMap(160, 16);
@@ -218,10 +240,8 @@ static void titleCreate(void) {
 
     phase = TITLE_PHASE_SPLASH;
     selectedItem = 0;
-    needsRedraw = 0;
     drawSplash();
-    viewProcessManagers(view);
-    copProcessBlocks();
+    presentBackBuffer();
 
     systemUnuse();
     viewLoad(view);
@@ -229,6 +249,8 @@ static void titleCreate(void) {
 }
 
 static void titleLoop(void) {
+    UBYTE selectionChanged = 0;
+
     if (phase == TITLE_PHASE_SPLASH) {
         if (keyUse(KEY_RETURN) || keyUse(KEY_SPACE) || joyUse(JOY1_FIRE)) {
             showMenu();
@@ -245,8 +267,10 @@ static void titleLoop(void) {
 
     if (keyUse(KEY_UP) || joyUse(JOY1_UP)) {
         selectPrevious();
+        selectionChanged = 1;
     } else if (keyUse(KEY_DOWN) || joyUse(JOY1_DOWN)) {
         selectNext();
+        selectionChanged = 1;
     }
 
     if (keyUse(KEY_RETURN) || keyUse(KEY_SPACE) || joyUse(JOY1_FIRE)) {
@@ -259,10 +283,9 @@ static void titleLoop(void) {
         return;
     }
 
-    if (needsRedraw) {
-        redrawMenu();
-        viewProcessManagers(view);
-        copProcessBlocks();
+    if (selectionChanged) {
+        redrawCursor();
+        presentBackBuffer();
     }
 
     vPortWaitForEnd(vport);
