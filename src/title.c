@@ -32,6 +32,7 @@ extern tStateManager *stateMgr;
 #define MENU_TEXT_Y (MENU_BOX_Y + 15)
 #define MENU_TEXT_SPACING 20
 #define MENU_CURSOR_X (MENU_BOX_X + 2)
+#define MENU_CURSOR_Y_OFFSET -1
 #define MENU_CURSOR_H 8
 #define MENU_CURSOR_BITMAP_H (MENU_CURSOR_H + 2)
 #define CURSOR_ANIM_FRAMES (sizeof(cursorAnimOffsets) / sizeof(cursorAnimOffsets[0]))
@@ -139,7 +140,7 @@ static void buildCursorSpriteBitmap(void) {
 }
 
 static void updateCursorSprite(void) {
-    UWORD y = MENU_TEXT_Y + (selectedItem * MENU_TEXT_SPACING);
+    WORD y = MENU_TEXT_Y + (selectedItem * MENU_TEXT_SPACING) + MENU_CURSOR_Y_OFFSET;
 
     cursorSprite->wX = MENU_CURSOR_X + cursorAnimOffsets[cursorAnimFrame];
     cursorSprite->wY = y;
