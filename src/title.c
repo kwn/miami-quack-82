@@ -151,6 +151,7 @@ static void titleCreate(void) {
     buffer = simpleBufferCreate(0,
         TAG_SIMPLEBUFFER_VPORT, vport,
         TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_CLEAR,
+        TAG_SIMPLEBUFFER_IS_DBLBUF, 1,
         TAG_DONE
     );
 
@@ -162,6 +163,8 @@ static void titleCreate(void) {
     selectedItem = 0;
     needsRedraw = 1;
     redrawMenu();
+    viewProcessManagers(view);
+    copProcessBlocks();
 
     systemUnuse();
     viewLoad(view);
@@ -186,10 +189,10 @@ static void titleLoop(void) {
 
     if (needsRedraw) {
         redrawMenu();
+        viewProcessManagers(view);
+        copProcessBlocks();
     }
 
-    viewProcessManagers(view);
-    copProcessBlocks();
     vPortWaitForEnd(vport);
 }
 
