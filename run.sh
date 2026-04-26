@@ -13,6 +13,8 @@ echo "--- Deploying to ~/Amiga/work ---"
 mkdir -p "$HOME/Amiga/work/S"
 cp "$SCRIPT_DIR/build/game.exe"         "$HOME/Amiga/work/"
 cp "$SCRIPT_DIR/conf/startup-sequence"  "$HOME/Amiga/work/S/"
+rm -rf "$HOME/Amiga/work/data"
+cp -R "$SCRIPT_DIR/build/data"          "$HOME/Amiga/work/"
 
 echo "--- Starting FS-UAE ---"
 "/Applications/FS-UAE.app/Contents/MacOS/fs-uae" "$SCRIPT_DIR/conf/game.fs-uae"

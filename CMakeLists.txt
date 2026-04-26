@@ -15,7 +15,7 @@ set(ACE_BOB_WRAP_Y                   OFF CACHE BOOL "" FORCE)
 add_subdirectory(deps/ace ace)
 
 # ---- Game sources ----------------------------------------------------------
-file(GLOB_RECURSE SOURCES src/*.c src/*.h)
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*.c src/*.h)
 
 set(STEM game)
 

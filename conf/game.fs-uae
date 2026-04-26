@@ -10,4 +10,4 @@ fast_memory = 0
 window_width = 1116
 window_height = 860
 joystick_port_0 = mouse
-joystick_port_1 = nothing
+joystick_port_1 = keyboard
