@@ -7,6 +7,7 @@
 #include <ace/managers/game.h>
 #include <ace/managers/joy.h>
 #include <ace/managers/key.h>
+#include <ace/managers/sprite.h>
 #include <ace/managers/state.h>
 #include <ace/managers/system.h>
 #include <ace/managers/viewport/simplebuffer.h>
@@ -14,6 +15,7 @@
 #include <ace/utils/extview.h>
 #include <ace/utils/font.h>
 #include <ace/utils/palette.h>
+#include <hardware/dmabits.h>
 
 extern tStateManager *stateMgr;
 
@@ -29,10 +31,10 @@ extern tStateManager *stateMgr;
 #define MENU_TEXT_X (MENU_BOX_X + 16)
 #define MENU_TEXT_Y (MENU_BOX_Y + 15)
 #define MENU_TEXT_SPACING 20
-#define MENU_CURSOR_X (MENU_BOX_X + 6)
-#define MENU_CURSOR_RESTORE_X MENU_BOX_X
-#define MENU_CURSOR_RESTORE_W 16
-#define MENU_CURSOR_RESTORE_H 12
+#define MENU_CURSOR_X (MENU_BOX_X + 2)
+#define MENU_CURSOR_H 8
+#define MENU_CURSOR_BITMAP_H (MENU_CURSOR_H + 2)
+#define CURSOR_ANIM_FRAMES (sizeof(cursorAnimOffsets) / sizeof(cursorAnimOffsets[0]))
 
 #define COLOR_TEXT 29
 #define COLOR_SELECTED 12
@@ -67,22 +69,42 @@ static const MenuItem menuItems[] = {
 
 #define MENU_ITEM_COUNT (sizeof(menuItems) / sizeof(menuItems[0]))
 
+static const UBYTE cursorAnimOffsets[] = {
+    0, 0, 1, 2, 3, 4, 5, 5, 6, 6, 6, 5, 5, 4, 3, 2, 1, 0
+};
+
+static const UWORD menuCursorData[MENU_CURSOR_H][2] = {
+    { 0x8000, 0x8000 },
+    { 0xC000, 0xC000 },
+    { 0xE000, 0xE000 },
+    { 0xF000, 0xF000 },
+    { 0xE000, 0xE000 },
+    { 0xC000, 0xC000 },
+    { 0x8000, 0x8000 },
+    { 0x0000, 0x0000 },
+};
+
 static tView *view;
 static tVPort *vport;
 static tSimpleBufferManager *buffer;
 static tBitMap *titleBitmap;
+static tBitMap *cursorBitmap;
+static tSprite *cursorSprite;
 static tFont *font;
 static tTextBitMap *textBitmap;
 static UWORD pristinePalette[TITLE_COLOR_COUNT];
 
 static TitlePhase phase;
 static UBYTE selectedItem;
+static UBYTE cursorAnimFrame;
+static UBYTE cursorAnimTick;
 
 static void drawText(tBitMap *dest, UWORD x, UWORD y, const char *text, UBYTE color) {
     gameFontDrawStr(font, dest, textBitmap, x, y, text, color, COLOR_SHADOW);
 }
 
 static void presentBackBuffer(void) {
+    spriteProcessChannel(0);
     viewProcessManagers(view);
     copProcessBlocks();
 }
@@ -102,6 +124,37 @@ static void fadePaletteLevel(BYTE fromLevel, BYTE toLevel) {
         if (level == toLevel) {
             break;
         }
+    }
+}
+
+static void buildCursorSpriteBitmap(void) {
+    cursorBitmap = bitmapCreate(16, MENU_CURSOR_BITMAP_H, 2, BMF_CLEAR | BMF_INTERLEAVED);
+
+    for (UBYTE row = 0; row < MENU_CURSOR_H; ++row) {
+        UWORD *plane0 = (UWORD *)(cursorBitmap->Planes[0] + ((row + 1) * cursorBitmap->BytesPerRow));
+        UWORD *plane1 = (UWORD *)(cursorBitmap->Planes[1] + ((row + 1) * cursorBitmap->BytesPerRow));
+        *plane0 = menuCursorData[row][0];
+        *plane1 = menuCursorData[row][1];
+    }
+}
+
+static void updateCursorSprite(void) {
+    UWORD y = MENU_TEXT_Y + (selectedItem * MENU_TEXT_SPACING);
+
+    cursorSprite->wX = MENU_CURSOR_X + cursorAnimOffsets[cursorAnimFrame];
+    cursorSprite->wY = y;
+    spriteRequestMetadataUpdate(cursorSprite);
+    spriteProcess(cursorSprite);
+}
+
+static void animateCursorSprite(void) {
+    cursorAnimTick = (cursorAnimTick + 1) & 3;
+    if (cursorAnimTick != 0) {
+        ++cursorAnimFrame;
+        if (cursorAnimFrame >= CURSOR_ANIM_FRAMES) {
+            cursorAnimFrame = 0;
+        }
+        updateCursorSprite();
     }
 }
 
@@ -137,40 +190,20 @@ static void drawMenuBase(tBitMap *dest) {
     }
 }
 
-static void restoreCursorSlots(tBitMap *dest) {
-    for (UBYTE i = 0; i < MENU_ITEM_COUNT; ++i) {
-        UWORD y = MENU_TEXT_Y + (i * MENU_TEXT_SPACING);
-        blitCopyAligned(
-            titleBitmap, MENU_CURSOR_RESTORE_X, y,
-            dest, MENU_CURSOR_RESTORE_X, y,
-            MENU_CURSOR_RESTORE_W, MENU_CURSOR_RESTORE_H
-        );
-        blitWait();
-        applyCheckerOverlay(dest, MENU_CURSOR_RESTORE_X, y, MENU_CURSOR_RESTORE_W, MENU_CURSOR_RESTORE_H);
-    }
-}
-
-static void drawMenuCursor(tBitMap *dest) {
-    UWORD y = MENU_TEXT_Y + (selectedItem * MENU_TEXT_SPACING);
-    drawText(dest, MENU_CURSOR_X, y, ">", COLOR_SELECTED);
-}
-
 static void drawFullMenu(tBitMap *dest) {
     drawMenuBase(dest);
-    drawMenuCursor(dest);
-}
-
-static void redrawCursor(void) {
-    restoreCursorSlots(buffer->pBack);
-    drawMenuCursor(buffer->pBack);
 }
 
 static void showMenu(void) {
     phase = TITLE_PHASE_MENU;
     selectedItem = 0;
+    cursorAnimFrame = 0;
+    cursorAnimTick = 0;
 
     fadePaletteLevel(PALETTE_FULL_LEVEL, MENU_DIM_LEVEL);
 
+    spriteSetEnabled(cursorSprite, 1);
+    updateCursorSprite();
     presentBackBuffer();
     vPortWaitForEnd(vport);
 
@@ -236,6 +269,11 @@ static void titleCreate(void) {
     font = fontCreateFromPath("data/fonts/quaver.fnt");
     textBitmap = fontCreateTextBitMap(160, 16);
     setPaletteLevel(PALETTE_BLACK_LEVEL);
+    spriteManagerCreate(view, 0, 0);
+    buildCursorSpriteBitmap();
+    cursorSprite = spriteAdd(0, cursorBitmap);
+    spriteSetEnabled(cursorSprite, 0);
+    systemSetDmaBit(DMAB_SPRITE, 1);
 
     phase = TITLE_PHASE_SPLASH;
     selectedItem = 0;
@@ -284,10 +322,12 @@ static void titleLoop(void) {
     }
 
     if (selectionChanged) {
-        redrawCursor();
-        presentBackBuffer();
+        updateCursorSprite();
     }
 
+    animateCursorSprite();
+    spriteProcessChannel(0);
+    copProcessBlocks();
     vPortWaitForEnd(vport);
 }
 
@@ -306,6 +346,16 @@ static void titleDestroy(void) {
     if (titleBitmap) {
         bitmapDestroy(titleBitmap);
         titleBitmap = 0;
+    }
+    if (cursorSprite) {
+        spriteRemove(cursorSprite);
+        cursorSprite = 0;
+    }
+    systemSetDmaBit(DMAB_SPRITE, 0);
+    spriteManagerDestroy();
+    if (cursorBitmap) {
+        bitmapDestroy(cursorBitmap);
+        cursorBitmap = 0;
     }
     if (view) {
         viewDestroy(view);
