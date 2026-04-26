@@ -33,6 +33,14 @@ extern tStateManager *stateMgr;
 #define COLOR_TEXT 29
 #define COLOR_SELECTED 12
 #define COLOR_SHADOW 23
+#define MENU_DIM_LEVEL 10
+#define PALETTE_FULL_LEVEL 15
+#define PALETTE_BLACK_LEVEL 0
+
+typedef enum {
+    TITLE_PHASE_SPLASH,
+    TITLE_PHASE_MENU
+} TitlePhase;
 
 typedef enum {
     MENU_ACTION_START,
@@ -61,12 +69,43 @@ static tSimpleBufferManager *buffer;
 static tBitMap *titleBitmap;
 static tFont *font;
 static tTextBitMap *textBitmap;
+static UWORD pristinePalette[TITLE_COLOR_COUNT];
 
+static TitlePhase phase;
 static UBYTE selectedItem;
 static UBYTE needsRedraw;
 
 static void drawText(UWORD x, UWORD y, const char *text, UBYTE color) {
     gameFontDrawStr(font, buffer->pBack, textBitmap, x, y, text, color, COLOR_SHADOW);
+}
+
+static void copyPristinePalette(void) {
+    for (UBYTE i = 0; i < TITLE_COLOR_COUNT; ++i) {
+        vport->pPalette[i] = pristinePalette[i];
+    }
+}
+
+static void setPaletteLevel(UBYTE level) {
+    paletteDim(pristinePalette, vport->pPalette, TITLE_COLOR_COUNT, level);
+    viewUpdateGlobalPalette(view);
+}
+
+static void fadePaletteLevel(BYTE fromLevel, BYTE toLevel) {
+    BYTE step = (fromLevel < toLevel) ? 1 : -1;
+
+    for (BYTE level = fromLevel; ; level += step) {
+        setPaletteLevel((UBYTE)level);
+        vPortWaitForEnd(vport);
+
+        if (level == toLevel) {
+            break;
+        }
+    }
+}
+
+static void drawSplash(void) {
+    blitCopyAligned(titleBitmap, 0, 0, buffer->pBack, 0, 0, SCREEN_W, SCREEN_H);
+    blitWait();
 }
 
 static void applyCheckerOverlay(tBitMap *bitmap, UWORD x, UWORD y, UWORD width, UWORD height) {
@@ -87,6 +126,7 @@ static void applyCheckerOverlay(tBitMap *bitmap, UWORD x, UWORD y, UWORD width, 
 
 static void redrawMenu(void) {
     blitCopyAligned(titleBitmap, 0, 0, buffer->pBack, 0, 0, SCREEN_W, SCREEN_H);
+    blitWait();
     applyCheckerOverlay(buffer->pBack, MENU_BOX_X, MENU_BOX_Y, MENU_BOX_W, MENU_BOX_H);
 
     for (UBYTE i = 0; i < MENU_ITEM_COUNT; ++i) {
@@ -99,6 +139,18 @@ static void redrawMenu(void) {
     }
 
     needsRedraw = 0;
+}
+
+static void showMenu(void) {
+    phase = TITLE_PHASE_MENU;
+    selectedItem = 0;
+
+    fadePaletteLevel(PALETTE_FULL_LEVEL, MENU_DIM_LEVEL);
+
+    needsRedraw = 1;
+    redrawMenu();
+    viewProcessManagers(view);
+    copProcessBlocks();
 }
 
 static void selectPrevious(void) {
@@ -121,9 +173,11 @@ static void selectNext(void) {
 static void activateSelected(void) {
     switch (menuItems[selectedItem].action) {
         case MENU_ACTION_START:
+            fadePaletteLevel(MENU_DIM_LEVEL, PALETTE_BLACK_LEVEL);
             stateChange(stateMgr, &scrollerState);
             break;
         case MENU_ACTION_EXIT:
+            fadePaletteLevel(MENU_DIM_LEVEL, PALETTE_BLACK_LEVEL);
             gameExit();
             break;
         case MENU_ACTION_OPTIONS:
@@ -155,22 +209,40 @@ static void titleCreate(void) {
         TAG_DONE
     );
 
-    paletteLoadFromPath("data/title/title.plt", vport->pPalette, TITLE_COLOR_COUNT);
+    paletteLoadFromPath("data/title/title.plt", pristinePalette, TITLE_COLOR_COUNT);
+    copyPristinePalette();
     titleBitmap = bitmapCreateFromPath("data/title/title.bm", 0);
     font = fontCreateFromPath("data/fonts/quaver.fnt");
     textBitmap = fontCreateTextBitMap(160, 16);
+    setPaletteLevel(PALETTE_BLACK_LEVEL);
 
+    phase = TITLE_PHASE_SPLASH;
     selectedItem = 0;
-    needsRedraw = 1;
-    redrawMenu();
+    needsRedraw = 0;
+    drawSplash();
     viewProcessManagers(view);
     copProcessBlocks();
 
     systemUnuse();
     viewLoad(view);
+    fadePaletteLevel(PALETTE_BLACK_LEVEL, PALETTE_FULL_LEVEL);
 }
 
 static void titleLoop(void) {
+    if (phase == TITLE_PHASE_SPLASH) {
+        if (keyUse(KEY_RETURN) || keyUse(KEY_SPACE) || joyUse(JOY1_FIRE)) {
+            showMenu();
+            return;
+        }
+        if (keyUse(KEY_ESCAPE)) {
+            gameExit();
+            return;
+        }
+
+        vPortWaitForEnd(vport);
+        return;
+    }
+
     if (keyUse(KEY_UP) || joyUse(JOY1_UP)) {
         selectPrevious();
     } else if (keyUse(KEY_DOWN) || joyUse(JOY1_DOWN)) {
