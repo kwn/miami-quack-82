@@ -159,6 +159,8 @@ static MenuPageId currentPage;
 static UBYTE selectedItem;
 static UBYTE cursorAnimFrame;
 static UBYTE cursorAnimTick;
+static UBYTE pendingRowRefresh;
+static UBYTE pendingRow;
 
 static void drawText(tBitMap *dest, UWORD x, UWORD y, const char *text, UBYTE color) {
     gameFontDrawStr(font, dest, textBitmap, x, y, text, color, COLOR_SHADOW);
@@ -288,12 +290,49 @@ static void drawMenuToBackBuffer(void) {
     blitWait();
 }
 
+static void drawMenuRowToBackBuffer(UBYTE row) {
+    const MenuPage *page = getCurrentMenuPage();
+    UWORD srcY = (MENU_TEXT_Y - MENU_BOX_Y) + (row * MENU_TEXT_SPACING);
+    UWORD dstY = MENU_TEXT_Y + (row * MENU_TEXT_SPACING);
+
+    blitCopyAligned(
+        menuBaseBitmap, 0, srcY,
+        menuDrawBitmap, 0, srcY,
+        MENU_BOX_W, MENU_TEXT_SPACING
+    );
+    blitWait();
+    drawText(menuDrawBitmap, MENU_TEXT_X - MENU_BOX_X, srcY, getMenuItemText(&page->items[row]), COLOR_TEXT);
+    blitCopyAligned(
+        menuDrawBitmap, 0, srcY,
+        buffer->pBack, MENU_BOX_X, dstY,
+        MENU_BOX_W, MENU_TEXT_SPACING
+    );
+    blitWait();
+}
+
 static void refreshMenuPage(void) {
     drawMenuToBackBuffer();
     updateCursorSprite();
     presentBackBuffer();
     vPortWaitForEnd(vport);
     drawMenuToBackBuffer();
+}
+
+static void refreshMenuRow(UBYTE row) {
+    drawMenuRowToBackBuffer(row);
+    updateCursorSprite();
+    presentBackBuffer();
+    pendingRow = row;
+    pendingRowRefresh = 1;
+}
+
+static void processPendingRowRefresh(void) {
+    if (!pendingRowRefresh) {
+        return;
+    }
+
+    drawMenuRowToBackBuffer(pendingRow);
+    pendingRowRefresh = 0;
 }
 
 static void showMenu(void) {
@@ -345,7 +384,7 @@ static void changeOption(const MenuItem *item, BYTE delta) {
     }
 
     *item->option.value = value;
-    refreshMenuPage();
+    refreshMenuRow(selectedItem);
 }
 
 static void showPage(MenuPageId page, UBYTE item) {
@@ -489,6 +528,7 @@ static void titleLoop(void) {
     spriteProcessChannel(0);
     copProcessBlocks();
     vPortWaitForEnd(vport);
+    processPendingRowRefresh();
 }
 
 static void titleDestroy(void) {
