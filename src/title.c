@@ -146,6 +146,8 @@ static tView *view;
 static tVPort *vport;
 static tSimpleBufferManager *buffer;
 static tBitMap *titleBitmap;
+static tBitMap *menuBaseBitmap;
+static tBitMap *menuDrawBitmap;
 static tBitMap *cursorBitmap;
 static tSprite *cursorSprite;
 static tFont *font;
@@ -233,8 +235,8 @@ static void animateCursorSprite(void) {
     }
 }
 
-static void drawSplash(void) {
-    blitCopyAligned(titleBitmap, 0, 0, buffer->pBack, 0, 0, SCREEN_W, SCREEN_H);
+static void drawSplash(tBitMap *dest) {
+    blitCopyAligned(titleBitmap, 0, 0, dest, 0, 0, SCREEN_W, SCREEN_H);
     blitWait();
 }
 
@@ -254,29 +256,44 @@ static void applyCheckerOverlay(tBitMap *bitmap, UWORD x, UWORD y, UWORD width, 
     }
 }
 
-static void drawMenuBase(tBitMap *dest) {
+static void buildMenuBaseBitmap(void) {
+    blitCopyAligned(
+        titleBitmap, MENU_BOX_X, MENU_BOX_Y,
+        menuBaseBitmap, 0, 0,
+        MENU_BOX_W, MENU_BOX_H
+    );
+    blitWait();
+    applyCheckerOverlay(menuBaseBitmap, 0, 0, MENU_BOX_W, MENU_BOX_H);
+}
+
+static void drawMenuPageToBuffer(void) {
     const MenuPage *page = getCurrentMenuPage();
 
-    blitCopyAligned(titleBitmap, 0, 0, dest, 0, 0, SCREEN_W, SCREEN_H);
+    blitCopyAligned(menuBaseBitmap, 0, 0, menuDrawBitmap, 0, 0, MENU_BOX_W, MENU_BOX_H);
     blitWait();
-    applyCheckerOverlay(dest, MENU_BOX_X, MENU_BOX_Y, MENU_BOX_W, MENU_BOX_H);
 
     for (UBYTE i = 0; i < page->itemCount; ++i) {
-        UWORD y = MENU_TEXT_Y + (i * MENU_TEXT_SPACING);
-        drawText(dest, MENU_TEXT_X, y, getMenuItemText(&page->items[i]), COLOR_TEXT);
+        UWORD y = (MENU_TEXT_Y - MENU_BOX_Y) + (i * MENU_TEXT_SPACING);
+        drawText(menuDrawBitmap, MENU_TEXT_X - MENU_BOX_X, y, getMenuItemText(&page->items[i]), COLOR_TEXT);
     }
 }
 
-static void drawFullMenu(tBitMap *dest) {
-    drawMenuBase(dest);
+static void drawMenuToBackBuffer(void) {
+    drawMenuPageToBuffer();
+    blitCopyAligned(
+        menuDrawBitmap, 0, 0,
+        buffer->pBack, MENU_BOX_X, MENU_BOX_Y,
+        MENU_BOX_W, MENU_BOX_H
+    );
+    blitWait();
 }
 
 static void refreshMenuPage(void) {
-    drawFullMenu(buffer->pBack);
+    drawMenuToBackBuffer();
     updateCursorSprite();
     presentBackBuffer();
     vPortWaitForEnd(vport);
-    drawFullMenu(buffer->pBack);
+    drawMenuToBackBuffer();
 }
 
 static void showMenu(void) {
@@ -293,7 +310,7 @@ static void showMenu(void) {
     presentBackBuffer();
     vPortWaitForEnd(vport);
 
-    drawFullMenu(buffer->pBack);
+    drawMenuToBackBuffer();
 }
 
 static void selectPrevious(void) {
@@ -391,6 +408,9 @@ static void titleCreate(void) {
 
     paletteLoadFromPath("data/title/title.plt", pristinePalette, TITLE_COLOR_COUNT);
     titleBitmap = bitmapCreateFromPath("data/title/title.bm", 0);
+    menuBaseBitmap = bitmapCreate(MENU_BOX_W, MENU_BOX_H, TITLE_BPP, BMF_CLEAR);
+    menuDrawBitmap = bitmapCreate(MENU_BOX_W, MENU_BOX_H, TITLE_BPP, BMF_CLEAR);
+    buildMenuBaseBitmap();
     font = fontCreateFromPath("data/fonts/quaver.fnt");
     textBitmap = fontCreateTextBitMap(160, 16);
     setPaletteLevel(PALETTE_BLACK_LEVEL);
@@ -403,13 +423,14 @@ static void titleCreate(void) {
     phase = TITLE_PHASE_SPLASH;
     currentPage = MENU_PAGE_MAIN;
     selectedItem = 0;
-    drawSplash();
+    drawSplash(buffer->pBack);
     presentBackBuffer();
 
     systemUnuse();
     viewLoad(view);
     fadePaletteLevel(PALETTE_BLACK_LEVEL, PALETTE_FULL_LEVEL);
-    drawFullMenu(buffer->pBack);
+    drawSplash(buffer->pBack);
+    drawMenuToBackBuffer();
 }
 
 static void titleLoop(void) {
@@ -485,6 +506,14 @@ static void titleDestroy(void) {
     if (titleBitmap) {
         bitmapDestroy(titleBitmap);
         titleBitmap = 0;
+    }
+    if (menuDrawBitmap) {
+        bitmapDestroy(menuDrawBitmap);
+        menuDrawBitmap = 0;
+    }
+    if (menuBaseBitmap) {
+        bitmapDestroy(menuBaseBitmap);
+        menuBaseBitmap = 0;
     }
     if (cursorSprite) {
         spriteRemove(cursorSprite);
