@@ -30,8 +30,8 @@ extern tStateManager *stateMgr;
 #define MENU_TEXT_SPACING 20
 
 #define COLOR_TEXT 29
-#define COLOR_SELECTED 16
-#define COLOR_SHADOW 12
+#define COLOR_SELECTED 12
+#define COLOR_SHADOW 23
 
 typedef enum {
     MENU_ACTION_START,
@@ -65,8 +65,8 @@ static UBYTE selectedItem;
 static UBYTE needsRedraw;
 
 static void drawText(UWORD x, UWORD y, const char *text, UBYTE color) {
-    fontDrawStr(font, buffer->pBack, x + 1, y + 1, text, COLOR_SHADOW, FONT_LEFT, textBitmap);
-    fontDrawStr(font, buffer->pBack, x, y, text, color, FONT_LEFT, textBitmap);
+    fontDrawStr(font, buffer->pBack, x + 1, y + 1, text, COLOR_SHADOW, FONT_LEFT | FONT_COOKIE, textBitmap);
+    fontDrawStr(font, buffer->pBack, x, y, text, color, FONT_LEFT | FONT_COOKIE, textBitmap);
 }
 
 static void applyCheckerOverlay(tBitMap *bitmap, UWORD x, UWORD y, UWORD width, UWORD height) {
