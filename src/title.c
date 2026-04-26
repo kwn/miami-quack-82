@@ -154,7 +154,11 @@ static tBitMap *cursorBitmap;
 static tSprite *cursorSprite;
 static tFont *font;
 static tTextBitMap *textBitmap;
+#ifdef ACE_USE_AGA_FEATURES
+static ULONG pristinePalette[TITLE_COLOR_COUNT];
+#else
 static UWORD pristinePalette[TITLE_COLOR_COUNT];
+#endif
 
 static TitlePhase phase;
 static MenuPageId currentPage;
@@ -191,7 +195,12 @@ static void presentBackBuffer(void) {
 }
 
 static void setPaletteLevel(UBYTE level) {
+#ifdef ACE_USE_AGA_FEATURES
+    UBYTE agaLevel = ((UWORD)level * 255) / PALETTE_FULL_LEVEL;
+    paletteDimAGA(pristinePalette, (ULONG *)vport->pPalette, TITLE_COLOR_COUNT, agaLevel);
+#else
     paletteDim(pristinePalette, vport->pPalette, TITLE_COLOR_COUNT, level);
+#endif
     viewUpdateGlobalPalette(view);
 }
 
@@ -423,6 +432,9 @@ static void titleCreate(void) {
     view = viewCreate(0,
         TAG_VIEW_GLOBAL_PALETTE, 1,
         TAG_VIEW_GLOBAL_BPP, 1,
+#ifdef ACE_USE_AGA_FEATURES
+        TAG_VIEW_USES_AGA, 1,
+#endif
         TAG_DONE
     );
 
@@ -431,6 +443,10 @@ static void titleCreate(void) {
         TAG_VPORT_BPP, TITLE_BPP,
         TAG_VPORT_WIDTH, SCREEN_W,
         TAG_VPORT_HEIGHT, SCREEN_H,
+#ifdef ACE_USE_AGA_FEATURES
+        TAG_VPORT_USES_AGA, 1,
+        TAG_VPORT_FMODE, 0,
+#endif
         TAG_DONE
     );
 
@@ -441,7 +457,11 @@ static void titleCreate(void) {
         TAG_DONE
     );
 
+#ifdef ACE_USE_AGA_FEATURES
+    paletteLoadFromPath("data/title/title.plt", (UWORD *)pristinePalette, TITLE_COLOR_COUNT);
+#else
     paletteLoadFromPath("data/title/title.plt", pristinePalette, TITLE_COLOR_COUNT);
+#endif
     titleBitmap = bitmapCreateFromPath("data/title/title.bm", 0);
     menuBaseBitmap = bitmapCreate(MENU_BOX_W, MENU_BOX_H, TITLE_BPP, BMF_CLEAR);
     menuDrawBitmap = bitmapCreate(MENU_BOX_W, MENU_BOX_H, TITLE_BPP, BMF_CLEAR);

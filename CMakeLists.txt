@@ -8,11 +8,24 @@ endif()
 set(CMAKE_C_STANDARD 11)
 
 # ---- ACE options (set before add_subdirectory) ----------------------------
+file(STRINGS
+    ${CMAKE_CURRENT_LIST_DIR}/deps/ace/CMakeLists.txt
+    ACE_AGA_FEATURE_LINES
+    REGEX "ACE_USE_AGA_FEATURES"
+)
+if(ACE_AGA_FEATURE_LINES)
+    set(GAME_USE_AGA ON)
+    set(ACE_USE_AGA_FEATURES ON CACHE BOOL "" FORCE)
+else()
+    set(GAME_USE_AGA OFF)
+endif()
+
 set(ACE_SCROLLBUFFER_ENABLE_SCROLL_X ON  CACHE BOOL "" FORCE)
 set(ACE_SCROLLBUFFER_ENABLE_SCROLL_Y ON  CACHE BOOL "" FORCE)
 set(ACE_BOB_WRAP_Y                   OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(deps/ace ace)
+message(STATUS "[game] GAME_USE_AGA: '${GAME_USE_AGA}'")
 
 # ---- Game sources ----------------------------------------------------------
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*.c src/*.h)
@@ -43,18 +56,47 @@ target_link_libraries(${GAME_TARGET} ace)
 # ---- Asset conversion -------------------------------------------------------
 set(RES_DIR ${CMAKE_CURRENT_LIST_DIR}/res)
 set(DATA_DIR ${CMAKE_CURRENT_BINARY_DIR}/data)
+set(TITLE_OCS_PALETTE ${DATA_DIR}/title/title_ocs.gpl)
 
 file(MAKE_DIRECTORY
     ${DATA_DIR}/title
     ${DATA_DIR}/fonts
 )
 
-convertPalette(
-    ${GAME_TARGET}
-    ${RES_DIR}/title/title.gpl
-    ${DATA_DIR}/title/title.plt
-    CONVERT_COLORS
+add_custom_command(
+    OUTPUT ${TITLE_OCS_PALETTE}
+    COMMAND ${CMAKE_COMMAND}
+        -DINPUT=${RES_DIR}/title/title.gpl
+        -DOUTPUT=${TITLE_OCS_PALETTE}
+        -P ${CMAKE_CURRENT_LIST_DIR}/cmake/gpl_to_ocs.cmake
+    DEPENDS
+        ${RES_DIR}/title/title.gpl
+        ${CMAKE_CURRENT_LIST_DIR}/cmake/gpl_to_ocs.cmake
 )
+
+getToolPath(palette_conv TOOL_PALETTE_CONV)
+if(GAME_USE_AGA)
+    add_custom_command(
+        OUTPUT ${DATA_DIR}/title/title.plt
+        COMMAND ${TOOL_PALETTE_CONV}
+            ${RES_DIR}/title/title.gpl
+            ${DATA_DIR}/title/title.plt
+            --aga
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        DEPENDS ${RES_DIR}/title/title.gpl
+    )
+else()
+    add_custom_command(
+        OUTPUT ${DATA_DIR}/title/title.plt
+        COMMAND ${TOOL_PALETTE_CONV}
+            ${TITLE_OCS_PALETTE}
+            ${DATA_DIR}/title/title.plt
+            --legacy
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        DEPENDS ${TITLE_OCS_PALETTE}
+    )
+endif()
+target_sources(${GAME_TARGET} PUBLIC ${DATA_DIR}/title/title.plt)
 
 convertBitmaps(
     TARGET ${GAME_TARGET}
