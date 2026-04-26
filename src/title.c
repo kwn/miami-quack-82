@@ -171,7 +171,6 @@ static void showMenu(void) {
 
     fadePaletteLevel(PALETTE_FULL_LEVEL, MENU_DIM_LEVEL);
 
-    drawFullMenu(buffer->pBack);
     presentBackBuffer();
     vPortWaitForEnd(vport);
 
@@ -246,6 +245,7 @@ static void titleCreate(void) {
     systemUnuse();
     viewLoad(view);
     fadePaletteLevel(PALETTE_BLACK_LEVEL, PALETTE_FULL_LEVEL);
+    drawFullMenu(buffer->pBack);
 }
 
 static void titleLoop(void) {
