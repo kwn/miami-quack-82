@@ -1,5 +1,6 @@
 #include "title.h"
 
+#include "font.h"
 #include "scroller.h"
 
 #include <ace/managers/blit.h>
@@ -65,8 +66,7 @@ static UBYTE selectedItem;
 static UBYTE needsRedraw;
 
 static void drawText(UWORD x, UWORD y, const char *text, UBYTE color) {
-    fontDrawStr(font, buffer->pBack, x + 1, y + 1, text, COLOR_SHADOW, FONT_LEFT | FONT_COOKIE, textBitmap);
-    fontDrawStr(font, buffer->pBack, x, y, text, color, FONT_LEFT | FONT_COOKIE, textBitmap);
+    gameFontDrawStr(font, buffer->pBack, textBitmap, x, y, text, color, COLOR_SHADOW);
 }
 
 static void applyCheckerOverlay(tBitMap *bitmap, UWORD x, UWORD y, UWORD width, UWORD height) {
