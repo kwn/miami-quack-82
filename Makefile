@@ -4,9 +4,6 @@
 #   make          – configure (first run) then build
 #   make clean    – delete build directory
 #
-# When building from the terminal instead of VS Code, export the toolchain:
-#   export PATH=$PATH:~/.vscode/extensions/bartmanabyss.amiga-debug-1.7.9/bin/darwin/opt/bin:~/.vscode/extensions/bartmanabyss.amiga-debug-1.7.9/bin/darwin
-# or just use:  bash run.sh
 
 BARTMAN_BIN   := $(HOME)/.vscode/extensions/bartmanabyss.amiga-debug-1.7.9/bin/darwin
 TOOLCHAIN_BIN := $(BARTMAN_BIN)/opt/bin

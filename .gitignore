@@ -1,4 +1,5 @@
 build/
+dist/
 *.exe
 *.elf
 .DS_Store
