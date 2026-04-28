@@ -1,5 +1,6 @@
 #include "game.h"
 
+#include "aim.h"
 #include "campaign.h"
 #include "hud.h"
 #include "scroller.h"
@@ -28,6 +29,7 @@ static void gameCreate(void) {
 
     hudCreate(view);
     gameVport = scrollerCreate(view);
+    aimCreate(view);
 
     viewLoad(view);
     systemUnuse();
@@ -53,6 +55,7 @@ static void gameLoop(void) {
     }
 
     scrollerMoveCamera(dx, dy);
+    aimProcess();
     scrollerProcess();
     viewProcessManagers(view);
     copProcessBlocks();
@@ -62,6 +65,7 @@ static void gameLoop(void) {
 static void gameDestroy(void) {
     systemUse();
     viewLoad(0);
+    aimDestroy();
     viewDestroy(view);
     scrollerDestroy();
     hudDestroy();

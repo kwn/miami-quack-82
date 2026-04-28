@@ -59,12 +59,15 @@ set(DATA_DIR ${CMAKE_CURRENT_BINARY_DIR}/data)
 set(TITLE_OCS_PALETTE ${DATA_DIR}/title/title_ocs.gpl)
 set(GET_READY_OCS_PALETTE ${DATA_DIR}/get_ready/get_ready_ocs.gpl)
 set(GAME_PALETTE ${RES_DIR}/jehkoba32_ecs.gpl)
+set(AIM_SPRITE_PNG ${DATA_DIR}/sprites/aim_hw.png)
+set(AIM_SPRITE_PALETTE ${DATA_DIR}/sprites/aim.gpl)
 
 file(MAKE_DIRECTORY
     ${DATA_DIR}/title
     ${DATA_DIR}/get_ready
     ${DATA_DIR}/game
     ${DATA_DIR}/hud
+    ${DATA_DIR}/sprites
     ${DATA_DIR}/fonts
 )
 
@@ -181,6 +184,31 @@ if(EXISTS ${RES_DIR}/hud/hud.png)
         PALETTE ${GAME_PALETTE}
         SOURCES ${RES_DIR}/hud/hud.png
         DESTINATIONS ${DATA_DIR}/hud/hud.bm
+    )
+endif()
+
+if(EXISTS ${RES_DIR}/sprites/aim.png)
+    find_program(PYTHON3_EXECUTABLE python3 REQUIRED)
+    add_custom_command(
+        OUTPUT ${AIM_SPRITE_PNG} ${AIM_SPRITE_PALETTE}
+        COMMAND ${PYTHON3_EXECUTABLE}
+            ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_sprite_png.py
+            --input ${RES_DIR}/sprites/aim.png
+            --output-png ${AIM_SPRITE_PNG}
+            --output-palette ${AIM_SPRITE_PALETTE}
+            --width 16
+            --height 16
+        DEPENDS
+            ${RES_DIR}/sprites/aim.png
+            ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_sprite_png.py
+    )
+
+    convertBitmaps(
+        TARGET ${GAME_TARGET}
+        INTERLEAVED
+        PALETTE ${AIM_SPRITE_PALETTE}
+        SOURCES ${AIM_SPRITE_PNG}
+        DESTINATIONS ${DATA_DIR}/sprites/aim.bm
     )
 endif()
 
