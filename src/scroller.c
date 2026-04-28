@@ -131,6 +131,14 @@ void scrollerProcess(void) {
     tileBufferProcess(tileBuf);
 }
 
+void scrollerSwapBuffers(void) {
+    scrollBufferProcess(tileBuf->pScroll);
+}
+
+void scrollerEndFrame(void) {
+    cameraProcess(tileBuf->pCamera);
+}
+
 void scrollerDestroy(void) {
     bitmapDestroy(tileSet);
     gameVport = 0;

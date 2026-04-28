@@ -59,11 +59,13 @@ static void gameLoop(void) {
     playerProcess();
     gameCameraTrackPlayer(playerGetX(), playerGetY(), playerHasMovementInput());
     gameCameraProcess();
+    bobSetCurrentBuffer(scrollerGetBackBuffer());
     bobBegin(scrollerGetBackBuffer());
     scrollerProcess();
     playerRender();
     bobEnd();
-    viewProcessManagers(view);
+    scrollerSwapBuffers();
+    scrollerEndFrame();
     copProcessBlocks();
     vPortWaitForEnd(gameVport);
 }
