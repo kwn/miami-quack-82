@@ -16,12 +16,10 @@ UWORD scrollerGetCameraX(void);
 UWORD scrollerGetCameraY(void);
 tBitMap *scrollerGetFrontBuffer(void);
 tBitMap *scrollerGetBackBuffer(void);
+tBitMap *scrollerGetPristineBuffer(void);
 UWORD scrollerGetBufferAvailHeight(void);
 UWORD scrollerGetWorldWidth(void);
 UWORD scrollerGetWorldHeight(void);
-void scrollerProcess(void);
-void scrollerSwapBuffers(void);
-void scrollerEndFrame(void);
 void scrollerDestroy(void);
 
 #endif /* SCROLLER_H */

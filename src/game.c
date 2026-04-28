@@ -37,6 +37,7 @@ static void gameCreate(void) {
     gameCameraTrackPlayer(playerGetX(), playerGetY(), playerHasMovementInput());
     gameCameraSnapToFocus();
     scrollerRedrawAll();
+    bobDiscardUndraw();
 
     viewLoad(view);
     systemUnuse();
@@ -59,13 +60,12 @@ static void gameLoop(void) {
     playerProcess();
     gameCameraTrackPlayer(playerGetX(), playerGetY(), playerHasMovementInput());
     gameCameraProcess();
-    bobSetCurrentBuffer(scrollerGetBackBuffer());
+
     bobBegin(scrollerGetBackBuffer());
-    scrollerProcess();
     playerRender();
     bobEnd();
-    scrollerSwapBuffers();
-    scrollerEndFrame();
+
+    viewProcessManagers(view);
     copProcessBlocks();
     vPortWaitForEnd(gameVport);
 }

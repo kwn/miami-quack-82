@@ -7,6 +7,7 @@
 #include <ace/managers/blit.h>
 #include <ace/managers/game.h>
 #include <ace/managers/viewport/tilebuffer.h>
+#include <ace/utils/bitmap.h>
 
 /* ------------------------------------------------------------------ sizes */
 
@@ -18,16 +19,12 @@
 static tVPort             *gameVport;
 static tTileBufferManager *tileBuf;
 static tBitMap            *tileSet;
+static tBitMap            *pristineBuffer;
 
-static void copyBackBufferToFront(void) {
-    UWORD *src = (UWORD *)tileBuf->pScroll->pBack->Planes[0];
-    UWORD *dst = (UWORD *)tileBuf->pScroll->pFront->Planes[0];
-    ULONG wordsToCopy = (tileBuf->pScroll->pFront->BytesPerRow * tileBuf->pScroll->pFront->Rows) / sizeof(UWORD);
-
-    blitWait();
-    while (wordsToCopy--) {
-        *dst++ = *src++;
-    }
+static void onTileDraw(UWORD tileX, UWORD tileY, tBitMap *bitmap, UWORD bitmapX, UWORD bitmapY) {
+    (void)tileX;
+    (void)tileY;
+    blitCopyAligned(bitmap, bitmapX, bitmapY, pristineBuffer, bitmapX, bitmapY, TILE_SIZE, TILE_SIZE);
 }
 
 static void buildMap(void) {
@@ -77,7 +74,14 @@ tVPort *scrollerCreate(tView *view) {
         TAG_TILEBUFFER_TILE_SHIFT,          TILE_SHIFT,
         TAG_TILEBUFFER_TILESET,             tileSet,
         TAG_TILEBUFFER_REDRAW_QUEUE_LENGTH, 100,
+        TAG_TILEBUFFER_CALLBACK_TILE_DRAW,  onTileDraw,
         TAG_DONE
+    );
+    pristineBuffer = bitmapCreate(
+        bitmapGetByteWidth(tileBuf->pScroll->pBack) * 8,
+        tileBuf->pScroll->pBack->Rows,
+        GAME_BPP,
+        BMF_CLEAR | BMF_INTERLEAVED
     );
 
     buildMap();
@@ -96,7 +100,6 @@ void scrollerSetCamera(UWORD x, UWORD y) {
 
 void scrollerRedrawAll(void) {
     tileBufferRedrawAll(tileBuf);
-    copyBackBufferToFront();
 }
 
 UWORD scrollerGetCameraX(void) {
@@ -115,6 +118,10 @@ tBitMap *scrollerGetBackBuffer(void) {
     return tileBuf->pScroll->pBack;
 }
 
+tBitMap *scrollerGetPristineBuffer(void) {
+    return pristineBuffer;
+}
+
 UWORD scrollerGetBufferAvailHeight(void) {
     return tileBuf->pScroll->uwBmAvailHeight;
 }
@@ -127,21 +134,11 @@ UWORD scrollerGetWorldHeight(void) {
     return MAP_H * TILE_SIZE;
 }
 
-void scrollerProcess(void) {
-    tileBufferProcess(tileBuf);
-}
-
-void scrollerSwapBuffers(void) {
-    scrollBufferProcess(tileBuf->pScroll);
-}
-
-void scrollerEndFrame(void) {
-    cameraProcess(tileBuf->pCamera);
-}
-
 void scrollerDestroy(void) {
+    bitmapDestroy(pristineBuffer);
     bitmapDestroy(tileSet);
     gameVport = 0;
     tileBuf = 0;
     tileSet = 0;
+    pristineBuffer = 0;
 }

@@ -23,6 +23,7 @@ endif()
 set(ACE_SCROLLBUFFER_ENABLE_SCROLL_X ON  CACHE BOOL "" FORCE)
 set(ACE_SCROLLBUFFER_ENABLE_SCROLL_Y ON  CACHE BOOL "" FORCE)
 set(ACE_BOB_WRAP_Y                   ON  CACHE BOOL "" FORCE)
+set(ACE_BOB_PRISTINE_BUFFER          ON  CACHE BOOL "" FORCE)
 
 add_subdirectory(deps/ace ace)
 message(STATUS "[game] GAME_USE_AGA: '${GAME_USE_AGA}'")

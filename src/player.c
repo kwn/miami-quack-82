@@ -149,6 +149,7 @@ void playerCreate(void) {
     bobManagerCreate(
         scrollerGetFrontBuffer(),
         scrollerGetBackBuffer(),
+        scrollerGetPristineBuffer(),
         scrollerGetBufferAvailHeight()
     );
     bobInit(
