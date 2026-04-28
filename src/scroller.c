@@ -13,29 +13,19 @@
 #include "scroller.h"
 
 #include "campaign.h"
+#include "hud.h"
 
 #include <ace/managers/key.h>
 #include <ace/managers/game.h>
 #include <ace/managers/blit.h>
 #include <ace/managers/system.h>
 #include <ace/managers/state.h>
-#include <ace/managers/viewport/simplebuffer.h>
 #include <ace/managers/viewport/tilebuffer.h>
-#include <ace/utils/bitmap.h>
-#include <ace/utils/disk_file.h>
 #include <ace/utils/extview.h>
-#include <ace/utils/palette.h>
 
 extern tStateManager *stateMgr;
 
 /* ------------------------------------------------------------------ sizes */
-
-#define BPP            5   /* 32 colours */
-#define COLOR_COUNT   (1 << BPP)
-#define SCREEN_W    320
-#define SCREEN_H    256
-#define HUD_H        16
-#define GAME_H      (SCREEN_H - HUD_H)
 
 #define TILE_SHIFT     4   /* 1 << 4 = 16 px per tile */
 #define TILE_SIZE     16
@@ -57,9 +47,7 @@ extern tStateManager *stateMgr;
 /* ------------------------------------------------------------------ state */
 
 static tView              *view;
-static tVPort             *hudVport;
 static tVPort             *gameVport;
-static tSimpleBufferManager *hudBuffer;
 static tTileBufferManager *tileBuf;
 static tBitMap            *tileSet;
 
@@ -69,7 +57,7 @@ static void buildTileSet(void) {
     tileSet = bitmapCreate(
         TILE_SIZE,
         TILE_SIZE * TILE_COUNT,
-        BPP,
+        GAME_BPP,
         BMF_CLEAR | BMF_INTERLEAVED
     );
 
@@ -100,40 +88,6 @@ static void buildMap(void) {
     }
 }
 
-static void loadHudPalette(void) {
-#ifdef ACE_USE_AGA_FEATURES
-    paletteLoadFromPath("data/game/game.plt", (UWORD *)hudVport->pPalette, COLOR_COUNT);
-#else
-    paletteLoadFromPath("data/game/game.plt", hudVport->pPalette, COLOR_COUNT);
-#endif
-}
-
-static void drawHudBackground(void) {
-    if (!diskFileExists("data/hud/hud.bm")) {
-        blitRect(hudBuffer->pBack, 0, 0, SCREEN_W, HUD_H, 0);
-        blitWait();
-        return;
-    }
-
-    tBitMap *hudBitmap = bitmapCreateFromPath("data/hud/hud.bm", 0);
-    if (
-        hudBitmap &&
-        hudBitmap->Depth == BPP &&
-        hudBitmap->Rows == HUD_H &&
-        bitmapGetByteWidth(hudBitmap) == (SCREEN_W >> 3)
-    ) {
-        blitCopyAligned(hudBitmap, 0, 0, hudBuffer->pBack, 0, 0, SCREEN_W, HUD_H);
-        blitWait();
-    } else {
-        blitRect(hudBuffer->pBack, 0, 0, SCREEN_W, HUD_H, 0);
-        blitWait();
-    }
-
-    if (hudBitmap) {
-        bitmapDestroy(hudBitmap);
-    }
-}
-
 /* ---------------------------------------------------- ACE state callbacks */
 
 static void scrollerCreate(void) {
@@ -146,32 +100,13 @@ static void scrollerCreate(void) {
         TAG_DONE
     );
 
-    hudVport = vPortCreate(0,
-        TAG_VPORT_VIEW, view,
-        TAG_VPORT_BPP,  BPP,
-        TAG_VPORT_WIDTH, SCREEN_W,
-        TAG_VPORT_HEIGHT, HUD_H,
-#ifdef ACE_USE_AGA_FEATURES
-        TAG_VPORT_USES_AGA, 1,
-        TAG_VPORT_FMODE, 0,
-#endif
-        TAG_DONE
-    );
-
-    hudBuffer = simpleBufferCreate(0,
-        TAG_SIMPLEBUFFER_VPORT, hudVport,
-        TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_CLEAR,
-        TAG_DONE
-    );
-
-    loadHudPalette();
-    drawHudBackground();
+    hudCreate(view);
 
     gameVport = vPortCreate(0,
         TAG_VPORT_VIEW, view,
-        TAG_VPORT_BPP,  BPP,
-        TAG_VPORT_WIDTH, SCREEN_W,
-        TAG_VPORT_HEIGHT, GAME_H,
+        TAG_VPORT_BPP,  GAME_BPP,
+        TAG_VPORT_WIDTH, GAME_SCREEN_W,
+        TAG_VPORT_HEIGHT, GAME_VIEW_H,
 #ifdef ACE_USE_AGA_FEATURES
         TAG_VPORT_USES_AGA, 1,
         TAG_VPORT_FMODE, 0,
@@ -231,10 +166,9 @@ static void scrollerDestroy(void) {
     viewLoad(0);
     viewDestroy(view);
     bitmapDestroy(tileSet);
+    hudDestroy();
     view = 0;
-    hudVport = 0;
     gameVport = 0;
-    hudBuffer = 0;
     tileBuf = 0;
     tileSet = 0;
 }
