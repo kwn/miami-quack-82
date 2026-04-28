@@ -105,6 +105,18 @@ void scrollerMoveCamera(WORD dx, WORD dy) {
     cameraMoveBy(tileBuf->pCamera, dx, dy);
 }
 
+void scrollerSetCamera(UWORD x, UWORD y) {
+    cameraSetCoord(tileBuf->pCamera, x, y);
+}
+
+UWORD scrollerGetCameraX(void) {
+    return tileBuf->pCamera->uPos.uwX;
+}
+
+UWORD scrollerGetCameraY(void) {
+    return tileBuf->pCamera->uPos.uwY;
+}
+
 void scrollerProcess(void) {
     tileBufferProcess(tileBuf);
 }

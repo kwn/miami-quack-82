@@ -2,6 +2,7 @@
 
 #include "aim.h"
 #include "campaign.h"
+#include "game_camera.h"
 #include "hud.h"
 #include "scroller.h"
 
@@ -11,8 +12,6 @@
 #include <ace/utils/extview.h>
 
 extern tStateManager *stateMgr;
-
-#define CAM_SPEED 4
 
 static tView *view;
 static tVPort *gameVport;
@@ -30,18 +29,13 @@ static void gameCreate(void) {
     hudCreate(view);
     gameVport = scrollerCreate(view);
     aimCreate(view);
+    gameCameraCreate();
 
     viewLoad(view);
     systemUnuse();
 }
 
 static void gameLoop(void) {
-    WORD dx = 0, dy = 0;
-    if (keyCheck(KEY_LEFT)  || keyCheck(KEY_A)) { dx = -CAM_SPEED; }
-    if (keyCheck(KEY_RIGHT) || keyCheck(KEY_D)) { dx =  CAM_SPEED; }
-    if (keyCheck(KEY_UP)    || keyCheck(KEY_W)) { dy = -CAM_SPEED; }
-    if (keyCheck(KEY_DOWN)  || keyCheck(KEY_S)) { dy =  CAM_SPEED; }
-
     if (keyUse(KEY_ESCAPE)) {
         campaignSetLevelResult(LEVEL_RESULT_EXIT_TO_TITLE);
         stateChange(stateMgr, &campaignState);
@@ -54,8 +48,8 @@ static void gameLoop(void) {
         return;
     }
 
-    scrollerMoveCamera(dx, dy);
     aimProcess();
+    gameCameraProcess();
     scrollerProcess();
     viewProcessManagers(view);
     copProcessBlocks();
@@ -65,6 +59,7 @@ static void gameLoop(void) {
 static void gameDestroy(void) {
     systemUse();
     viewLoad(0);
+    gameCameraDestroy();
     aimDestroy();
     viewDestroy(view);
     scrollerDestroy();

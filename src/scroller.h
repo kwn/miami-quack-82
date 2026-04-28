@@ -9,6 +9,9 @@
  */
 tVPort *scrollerCreate(tView *view);
 void scrollerMoveCamera(WORD dx, WORD dy);
+void scrollerSetCamera(UWORD x, UWORD y);
+UWORD scrollerGetCameraX(void);
+UWORD scrollerGetCameraY(void);
 void scrollerProcess(void);
 void scrollerDestroy(void);
 
