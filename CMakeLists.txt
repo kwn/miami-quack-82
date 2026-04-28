@@ -58,10 +58,13 @@ set(RES_DIR ${CMAKE_CURRENT_LIST_DIR}/res)
 set(DATA_DIR ${CMAKE_CURRENT_BINARY_DIR}/data)
 set(TITLE_OCS_PALETTE ${DATA_DIR}/title/title_ocs.gpl)
 set(GET_READY_OCS_PALETTE ${DATA_DIR}/get_ready/get_ready_ocs.gpl)
+set(GAME_PALETTE ${RES_DIR}/jehkoba32_ecs.gpl)
 
 file(MAKE_DIRECTORY
     ${DATA_DIR}/title
     ${DATA_DIR}/get_ready
+    ${DATA_DIR}/game
+    ${DATA_DIR}/hud
     ${DATA_DIR}/fonts
 )
 
@@ -99,6 +102,29 @@ else()
     )
 endif()
 target_sources(${GAME_TARGET} PUBLIC ${DATA_DIR}/title/title.plt)
+
+if(GAME_USE_AGA)
+    add_custom_command(
+        OUTPUT ${DATA_DIR}/game/game.plt
+        COMMAND ${TOOL_PALETTE_CONV}
+            ${GAME_PALETTE}
+            ${DATA_DIR}/game/game.plt
+            --aga
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        DEPENDS ${GAME_PALETTE}
+    )
+else()
+    add_custom_command(
+        OUTPUT ${DATA_DIR}/game/game.plt
+        COMMAND ${TOOL_PALETTE_CONV}
+            ${GAME_PALETTE}
+            ${DATA_DIR}/game/game.plt
+            --legacy
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        DEPENDS ${GAME_PALETTE}
+    )
+endif()
+target_sources(${GAME_TARGET} PUBLIC ${DATA_DIR}/game/game.plt)
 
 convertBitmaps(
     TARGET ${GAME_TARGET}
@@ -146,6 +172,15 @@ if(EXISTS ${RES_DIR}/get_ready/get_ready.png AND EXISTS ${RES_DIR}/get_ready/get
         PALETTE ${RES_DIR}/get_ready/get_ready.gpl
         SOURCES ${RES_DIR}/get_ready/get_ready.png
         DESTINATIONS ${DATA_DIR}/get_ready/get_ready.bm
+    )
+endif()
+
+if(EXISTS ${RES_DIR}/hud/hud.png)
+    convertBitmaps(
+        TARGET ${GAME_TARGET}
+        PALETTE ${GAME_PALETTE}
+        SOURCES ${RES_DIR}/hud/hud.png
+        DESTINATIONS ${DATA_DIR}/hud/hud.bm
     )
 endif()
 

@@ -19,14 +19,23 @@
 #include <ace/managers/blit.h>
 #include <ace/managers/system.h>
 #include <ace/managers/state.h>
+#include <ace/managers/viewport/simplebuffer.h>
 #include <ace/managers/viewport/tilebuffer.h>
+#include <ace/utils/bitmap.h>
+#include <ace/utils/disk_file.h>
 #include <ace/utils/extview.h>
+#include <ace/utils/palette.h>
 
 extern tStateManager *stateMgr;
 
 /* ------------------------------------------------------------------ sizes */
 
-#define BPP            4   /* 16 colours */
+#define BPP            5   /* 32 colours */
+#define COLOR_COUNT   (1 << BPP)
+#define SCREEN_W    320
+#define SCREEN_H    256
+#define HUD_H        16
+#define GAME_H      (SCREEN_H - HUD_H)
 
 #define TILE_SHIFT     4   /* 1 << 4 = 16 px per tile */
 #define TILE_SIZE     16
@@ -45,31 +54,12 @@ extern tStateManager *stateMgr;
 #define TILE_SAND    4
 #define TILE_COUNT   5
 
-/* ---------------------------------------------------------------- palette
- * 12-bit Amiga OCS colour: 0xRGB
- * Indices 0..4  : tile base colours
- * Indices 5..9  : tile highlight / detail colours
- * Indices 10..15: spare
- */
-static const UWORD palette[1 << BPP] = {
-    /* 0  grass dark  */ 0x0271,
-    /* 1  dirt  dark  */ 0x0531,
-    /* 2  water dark  */ 0x0027,
-    /* 3  stone dark  */ 0x0445,
-    /* 4  sand  dark  */ 0x0AA4,
-    /* 5  grass light */ 0x04C2,
-    /* 6  dirt  light */ 0x0A62,
-    /* 7  water light */ 0x024B,
-    /* 8  stone light */ 0x0778,
-    /* 9  sand  light */ 0x0EC7,
-    /* 10..15 spare   */
-    0x0000, 0x0333, 0x0666, 0x0999, 0x0FFF, 0x0F22,
-};
-
 /* ------------------------------------------------------------------ state */
 
 static tView              *view;
-static tVPort             *vport;
+static tVPort             *hudVport;
+static tVPort             *gameVport;
+static tSimpleBufferManager *hudBuffer;
 static tTileBufferManager *tileBuf;
 static tBitMap            *tileSet;
 
@@ -110,25 +100,89 @@ static void buildMap(void) {
     }
 }
 
+static void loadHudPalette(void) {
+#ifdef ACE_USE_AGA_FEATURES
+    paletteLoadFromPath("data/game/game.plt", (UWORD *)hudVport->pPalette, COLOR_COUNT);
+#else
+    paletteLoadFromPath("data/game/game.plt", hudVport->pPalette, COLOR_COUNT);
+#endif
+}
+
+static void drawHudBackground(void) {
+    if (!diskFileExists("data/hud/hud.bm")) {
+        blitRect(hudBuffer->pBack, 0, 0, SCREEN_W, HUD_H, 0);
+        blitWait();
+        return;
+    }
+
+    tBitMap *hudBitmap = bitmapCreateFromPath("data/hud/hud.bm", 0);
+    if (
+        hudBitmap &&
+        hudBitmap->Depth == BPP &&
+        hudBitmap->Rows == HUD_H &&
+        bitmapGetByteWidth(hudBitmap) == (SCREEN_W >> 3)
+    ) {
+        blitCopyAligned(hudBitmap, 0, 0, hudBuffer->pBack, 0, 0, SCREEN_W, HUD_H);
+        blitWait();
+    } else {
+        blitRect(hudBuffer->pBack, 0, 0, SCREEN_W, HUD_H, 0);
+        blitWait();
+    }
+
+    if (hudBitmap) {
+        bitmapDestroy(hudBitmap);
+    }
+}
+
 /* ---------------------------------------------------- ACE state callbacks */
 
 static void scrollerCreate(void) {
-    view = viewCreate(0, TAG_DONE);
-
-    vport = vPortCreate(0,
-        TAG_VPORT_VIEW, view,
-        TAG_VPORT_BPP,  BPP,
+    view = viewCreate(0,
+        TAG_VIEW_GLOBAL_PALETTE, 1,
+        TAG_VIEW_GLOBAL_BPP, 1,
+#ifdef ACE_USE_AGA_FEATURES
+        TAG_VIEW_USES_AGA, 1,
+#endif
         TAG_DONE
     );
 
-    for (UBYTE i = 0; i < (1 << BPP); ++i) {
-        vport->pPalette[i] = palette[i];
-    }
+    hudVport = vPortCreate(0,
+        TAG_VPORT_VIEW, view,
+        TAG_VPORT_BPP,  BPP,
+        TAG_VPORT_WIDTH, SCREEN_W,
+        TAG_VPORT_HEIGHT, HUD_H,
+#ifdef ACE_USE_AGA_FEATURES
+        TAG_VPORT_USES_AGA, 1,
+        TAG_VPORT_FMODE, 0,
+#endif
+        TAG_DONE
+    );
+
+    hudBuffer = simpleBufferCreate(0,
+        TAG_SIMPLEBUFFER_VPORT, hudVport,
+        TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_CLEAR,
+        TAG_DONE
+    );
+
+    loadHudPalette();
+    drawHudBackground();
+
+    gameVport = vPortCreate(0,
+        TAG_VPORT_VIEW, view,
+        TAG_VPORT_BPP,  BPP,
+        TAG_VPORT_WIDTH, SCREEN_W,
+        TAG_VPORT_HEIGHT, GAME_H,
+#ifdef ACE_USE_AGA_FEATURES
+        TAG_VPORT_USES_AGA, 1,
+        TAG_VPORT_FMODE, 0,
+#endif
+        TAG_DONE
+    );
 
     buildTileSet();
 
     tileBuf = tileBufferCreate(0,
-        TAG_TILEBUFFER_VPORT,               vport,
+        TAG_TILEBUFFER_VPORT,               gameVport,
         TAG_TILEBUFFER_BITMAP_FLAGS,        BMF_CLEAR | BMF_INTERLEAVED,
         TAG_TILEBUFFER_BOUND_TILE_X,        MAP_TILES_X,
         TAG_TILEBUFFER_BOUND_TILE_Y,        MAP_TILES_Y,
@@ -169,7 +223,7 @@ static void scrollerLoop(void) {
     tileBufferProcess(tileBuf);
     viewProcessManagers(view);
     copProcessBlocks();
-    vPortWaitForEnd(vport);
+    vPortWaitForEnd(gameVport);
 }
 
 static void scrollerDestroy(void) {
@@ -177,6 +231,12 @@ static void scrollerDestroy(void) {
     viewLoad(0);
     viewDestroy(view);
     bitmapDestroy(tileSet);
+    view = 0;
+    hudVport = 0;
+    gameVport = 0;
+    hudBuffer = 0;
+    tileBuf = 0;
+    tileSet = 0;
 }
 
 /* -------------------------------------------------- exported state struct */
