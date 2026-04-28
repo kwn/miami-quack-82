@@ -3,7 +3,6 @@
 #include <ace/managers/blit.h>
 #include <ace/managers/viewport/simplebuffer.h>
 #include <ace/utils/bitmap.h>
-#include <ace/utils/disk_file.h>
 #include <ace/utils/palette.h>
 
 static tVPort *hudVport;
@@ -18,29 +17,10 @@ static void loadPalette(void) {
 }
 
 static void drawBackground(void) {
-    if (!diskFileExists("data/hud/hud.bm")) {
-        blitRect(hudBuffer->pBack, 0, 0, GAME_SCREEN_W, HUD_H, 0);
-        blitWait();
-        return;
-    }
-
     tBitMap *hudBitmap = bitmapCreateFromPath("data/hud/hud.bm", 0);
-    if (
-        hudBitmap &&
-        hudBitmap->Depth == GAME_BPP &&
-        hudBitmap->Rows == HUD_H &&
-        bitmapGetByteWidth(hudBitmap) == (GAME_SCREEN_W >> 3)
-    ) {
-        blitCopyAligned(hudBitmap, 0, 0, hudBuffer->pBack, 0, 0, GAME_SCREEN_W, HUD_H);
-        blitWait();
-    } else {
-        blitRect(hudBuffer->pBack, 0, 0, GAME_SCREEN_W, HUD_H, 0);
-        blitWait();
-    }
-
-    if (hudBitmap) {
-        bitmapDestroy(hudBitmap);
-    }
+    blitCopyAligned(hudBitmap, 0, 0, hudBuffer->pBack, 0, 0, GAME_SCREEN_W, HUD_H);
+    blitWait();
+    bitmapDestroy(hudBitmap);
 }
 
 tVPort *hudCreate(tView *view) {
