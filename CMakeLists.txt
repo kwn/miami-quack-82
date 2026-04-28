@@ -28,6 +28,33 @@ set(ACE_BOB_PRISTINE_BUFFER          ON  CACHE BOOL "" FORCE)
 add_subdirectory(deps/ace ace)
 message(STATUS "[game] GAME_USE_AGA: '${GAME_USE_AGA}'")
 
+function(ensureAceTools)
+    set(ACE_TOOLS_DIR ${CMAKE_CURRENT_LIST_DIR}/deps/ace/tools)
+    set(ACE_TOOLS_BUILD_DIR ${ACE_TOOLS_DIR}/build)
+    set(ACE_REQUIRED_TOOLS palette_conv bitmap_conv font_conv)
+
+    message(STATUS "[game] Ensuring ACE host tools")
+    execute_process(
+        COMMAND ${CMAKE_COMMAND} -S ${ACE_TOOLS_DIR} -B ${ACE_TOOLS_BUILD_DIR}
+        RESULT_VARIABLE ACE_TOOLS_CONFIGURE_RESULT
+    )
+    if(NOT ACE_TOOLS_CONFIGURE_RESULT EQUAL 0)
+        message(FATAL_ERROR "Failed to configure ACE host tools")
+    endif()
+
+    execute_process(
+        COMMAND ${CMAKE_COMMAND}
+            --build ${ACE_TOOLS_BUILD_DIR}
+            --target ${ACE_REQUIRED_TOOLS}
+        RESULT_VARIABLE ACE_TOOLS_BUILD_RESULT
+    )
+    if(NOT ACE_TOOLS_BUILD_RESULT EQUAL 0)
+        message(FATAL_ERROR "Failed to build ACE host tools")
+    endif()
+endfunction()
+
+ensureAceTools()
+
 # Match the original game's optimization level while keeping the selected CPU
 # from the active toolchain/CMake preset.
 set(GAME_OPT_FLAGS -Ofast)
