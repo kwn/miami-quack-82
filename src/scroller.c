@@ -12,12 +12,17 @@
 
 #include "scroller.h"
 
+#include "campaign.h"
+
 #include <ace/managers/key.h>
 #include <ace/managers/game.h>
 #include <ace/managers/blit.h>
 #include <ace/managers/system.h>
+#include <ace/managers/state.h>
 #include <ace/managers/viewport/tilebuffer.h>
 #include <ace/utils/extview.h>
+
+extern tStateManager *stateMgr;
 
 /* ------------------------------------------------------------------ sizes */
 
@@ -149,7 +154,14 @@ static void scrollerLoop(void) {
     if (keyCheck(KEY_DOWN)  || keyCheck(KEY_S)) { dy =  CAM_SPEED; }
 
     if (keyUse(KEY_ESCAPE)) {
-        gameExit();
+        campaignSetLevelResult(LEVEL_RESULT_EXIT_TO_TITLE);
+        stateChange(stateMgr, &campaignState);
+        return;
+    }
+
+    if (keyUse(KEY_RETURN) || keyUse(KEY_SPACE)) {
+        campaignSetLevelResult(LEVEL_RESULT_COMPLETED);
+        stateChange(stateMgr, &campaignState);
         return;
     }
 

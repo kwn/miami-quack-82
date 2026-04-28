@@ -57,9 +57,11 @@ target_link_libraries(${GAME_TARGET} ace)
 set(RES_DIR ${CMAKE_CURRENT_LIST_DIR}/res)
 set(DATA_DIR ${CMAKE_CURRENT_BINARY_DIR}/data)
 set(TITLE_OCS_PALETTE ${DATA_DIR}/title/title_ocs.gpl)
+set(GET_READY_OCS_PALETTE ${DATA_DIR}/get_ready/get_ready_ocs.gpl)
 
 file(MAKE_DIRECTORY
     ${DATA_DIR}/title
+    ${DATA_DIR}/get_ready
     ${DATA_DIR}/fonts
 )
 
@@ -104,6 +106,48 @@ convertBitmaps(
     SOURCES ${RES_DIR}/title/title.png
     DESTINATIONS ${DATA_DIR}/title/title.bm
 )
+
+if(EXISTS ${RES_DIR}/get_ready/get_ready.png AND EXISTS ${RES_DIR}/get_ready/get_ready.gpl)
+    if(GAME_USE_AGA)
+        add_custom_command(
+            OUTPUT ${DATA_DIR}/get_ready/get_ready.plt
+            COMMAND ${TOOL_PALETTE_CONV}
+                ${RES_DIR}/get_ready/get_ready.gpl
+                ${DATA_DIR}/get_ready/get_ready.plt
+                --aga
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            DEPENDS ${RES_DIR}/get_ready/get_ready.gpl
+        )
+    else()
+        add_custom_command(
+            OUTPUT ${GET_READY_OCS_PALETTE}
+            COMMAND ${CMAKE_COMMAND}
+                -DINPUT=${RES_DIR}/get_ready/get_ready.gpl
+                -DOUTPUT=${GET_READY_OCS_PALETTE}
+                -P ${CMAKE_CURRENT_LIST_DIR}/cmake/gpl_to_ocs.cmake
+            DEPENDS
+                ${RES_DIR}/get_ready/get_ready.gpl
+                ${CMAKE_CURRENT_LIST_DIR}/cmake/gpl_to_ocs.cmake
+        )
+        add_custom_command(
+            OUTPUT ${DATA_DIR}/get_ready/get_ready.plt
+            COMMAND ${TOOL_PALETTE_CONV}
+                ${GET_READY_OCS_PALETTE}
+                ${DATA_DIR}/get_ready/get_ready.plt
+                --legacy
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            DEPENDS ${GET_READY_OCS_PALETTE}
+        )
+    endif()
+    target_sources(${GAME_TARGET} PUBLIC ${DATA_DIR}/get_ready/get_ready.plt)
+
+    convertBitmaps(
+        TARGET ${GAME_TARGET}
+        PALETTE ${RES_DIR}/get_ready/get_ready.gpl
+        SOURCES ${RES_DIR}/get_ready/get_ready.png
+        DESTINATIONS ${DATA_DIR}/get_ready/get_ready.bm
+    )
+endif()
 
 getToolPath(font_conv TOOL_FONT_CONV)
 add_custom_command(

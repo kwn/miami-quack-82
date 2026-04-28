@@ -1,7 +1,7 @@
 #include "title.h"
 
+#include "campaign.h"
 #include "font.h"
-#include "scroller.h"
 
 #include <ace/managers/blit.h>
 #include <ace/managers/game.h>
@@ -409,7 +409,8 @@ static void activateSelected(void) {
     switch (item->action) {
         case MENU_ACTION_START:
             fadePaletteLevel(MENU_DIM_LEVEL, PALETTE_BLACK_LEVEL);
-            stateChange(stateMgr, &scrollerState);
+            campaignStartNewGame();
+            stateChange(stateMgr, &campaignState);
             break;
         case MENU_ACTION_OPTIONS:
             showPage(MENU_PAGE_OPTIONS, 0);
