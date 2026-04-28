@@ -93,6 +93,8 @@ add_custom_command(
 )
 
 getToolPath(palette_conv TOOL_PALETTE_CONV)
+find_program(PYTHON3_EXECUTABLE python3 REQUIRED)
+
 if(GAME_USE_AGA)
     add_custom_command(
         OUTPUT ${DATA_DIR}/title/title.plt
@@ -146,133 +148,120 @@ convertBitmaps(
     DESTINATIONS ${DATA_DIR}/title/title.bm
 )
 
-if(EXISTS ${RES_DIR}/get_ready/get_ready.png AND EXISTS ${RES_DIR}/get_ready/get_ready.gpl)
-    if(GAME_USE_AGA)
-        add_custom_command(
-            OUTPUT ${DATA_DIR}/get_ready/get_ready.plt
-            COMMAND ${TOOL_PALETTE_CONV}
-                ${RES_DIR}/get_ready/get_ready.gpl
-                ${DATA_DIR}/get_ready/get_ready.plt
-                --aga
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            DEPENDS ${RES_DIR}/get_ready/get_ready.gpl
-        )
-    else()
-        add_custom_command(
-            OUTPUT ${GET_READY_OCS_PALETTE}
-            COMMAND ${CMAKE_COMMAND}
-                -DINPUT=${RES_DIR}/get_ready/get_ready.gpl
-                -DOUTPUT=${GET_READY_OCS_PALETTE}
-                -P ${CMAKE_CURRENT_LIST_DIR}/cmake/gpl_to_ocs.cmake
-            DEPENDS
-                ${RES_DIR}/get_ready/get_ready.gpl
-                ${CMAKE_CURRENT_LIST_DIR}/cmake/gpl_to_ocs.cmake
-        )
-        add_custom_command(
-            OUTPUT ${DATA_DIR}/get_ready/get_ready.plt
-            COMMAND ${TOOL_PALETTE_CONV}
-                ${GET_READY_OCS_PALETTE}
-                ${DATA_DIR}/get_ready/get_ready.plt
-                --legacy
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            DEPENDS ${GET_READY_OCS_PALETTE}
-        )
-    endif()
-    target_sources(${GAME_TARGET} PUBLIC ${DATA_DIR}/get_ready/get_ready.plt)
-
-    convertBitmaps(
-        TARGET ${GAME_TARGET}
-        PALETTE ${RES_DIR}/get_ready/get_ready.gpl
-        SOURCES ${RES_DIR}/get_ready/get_ready.png
-        DESTINATIONS ${DATA_DIR}/get_ready/get_ready.bm
-    )
-endif()
-
-if(EXISTS ${RES_DIR}/hud/hud.png)
-    convertBitmaps(
-        TARGET ${GAME_TARGET}
-        PALETTE ${GAME_PALETTE}
-        SOURCES ${RES_DIR}/hud/hud.png
-        DESTINATIONS ${DATA_DIR}/hud/hud.bm
-    )
-endif()
-
-if(EXISTS ${RES_DIR}/sprites/aim.png)
-    find_program(PYTHON3_EXECUTABLE python3 REQUIRED)
+if(GAME_USE_AGA)
     add_custom_command(
-        OUTPUT ${AIM_SPRITE_PNG} ${AIM_SPRITE_PALETTE}
-        COMMAND ${PYTHON3_EXECUTABLE}
-            ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_sprite_png.py
-            --input ${RES_DIR}/sprites/aim.png
-            --output-png ${AIM_SPRITE_PNG}
-            --output-palette ${AIM_SPRITE_PALETTE}
-            --width 16
-            --height 16
-        DEPENDS
-            ${RES_DIR}/sprites/aim.png
-            ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_sprite_png.py
+        OUTPUT ${DATA_DIR}/get_ready/get_ready.plt
+        COMMAND ${TOOL_PALETTE_CONV}
+            ${RES_DIR}/get_ready/get_ready.gpl
+            ${DATA_DIR}/get_ready/get_ready.plt
+            --aga
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        DEPENDS ${RES_DIR}/get_ready/get_ready.gpl
     )
-
-    convertBitmaps(
-        TARGET ${GAME_TARGET}
-        INTERLEAVED
-        PALETTE ${AIM_SPRITE_PALETTE}
-        SOURCES ${AIM_SPRITE_PNG}
-        DESTINATIONS ${DATA_DIR}/sprites/aim.bm
-    )
-endif()
-
-if(EXISTS ${RES_DIR}/player/player.png)
-    find_program(PYTHON3_EXECUTABLE python3 REQUIRED)
+else()
     add_custom_command(
-        OUTPUT ${PLAYER_MASKED_PNG}
-        COMMAND ${PYTHON3_EXECUTABLE}
-            ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_masked_png.py
-            --input ${RES_DIR}/player/player.png
-            --output ${PLAYER_MASKED_PNG}
-            --width 16
-            --height 240
+        OUTPUT ${GET_READY_OCS_PALETTE}
+        COMMAND ${CMAKE_COMMAND}
+            -DINPUT=${RES_DIR}/get_ready/get_ready.gpl
+            -DOUTPUT=${GET_READY_OCS_PALETTE}
+            -P ${CMAKE_CURRENT_LIST_DIR}/cmake/gpl_to_ocs.cmake
         DEPENDS
-            ${RES_DIR}/player/player.png
-            ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_masked_png.py
+            ${RES_DIR}/get_ready/get_ready.gpl
+            ${CMAKE_CURRENT_LIST_DIR}/cmake/gpl_to_ocs.cmake
     )
-
-    convertBitmaps(
-        TARGET ${GAME_TARGET}
-        INTERLEAVED
-        PALETTE ${GAME_PALETTE}
-        MASK_COLOR "#FF00FF"
-        SOURCES ${PLAYER_MASKED_PNG}
-        DESTINATIONS ${DATA_DIR}/player/player.bm
-        MASKS ${DATA_DIR}/player/player_mask.bm
-    )
-endif()
-
-if(EXISTS ${RES_DIR}/tileset/outdoor.png)
-    find_program(PYTHON3_EXECUTABLE python3 REQUIRED)
     add_custom_command(
-        OUTPUT ${OUTDOOR_TILESET_COLUMN_PNG}
-        COMMAND ${PYTHON3_EXECUTABLE}
-            ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_tileset_column.py
-            --input ${RES_DIR}/tileset/outdoor.png
-            --output ${OUTDOOR_TILESET_COLUMN_PNG}
-            --tile-width 16
-            --tile-height 16
-            --columns 7
-            --rows 5
-        DEPENDS
-            ${RES_DIR}/tileset/outdoor.png
-            ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_tileset_column.py
-    )
-
-    convertBitmaps(
-        TARGET ${GAME_TARGET}
-        INTERLEAVED
-        PALETTE ${GAME_PALETTE}
-        SOURCES ${OUTDOOR_TILESET_COLUMN_PNG}
-        DESTINATIONS ${DATA_DIR}/tileset/outdoor.bm
+        OUTPUT ${DATA_DIR}/get_ready/get_ready.plt
+        COMMAND ${TOOL_PALETTE_CONV}
+            ${GET_READY_OCS_PALETTE}
+            ${DATA_DIR}/get_ready/get_ready.plt
+            --legacy
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        DEPENDS ${GET_READY_OCS_PALETTE}
     )
 endif()
+target_sources(${GAME_TARGET} PUBLIC ${DATA_DIR}/get_ready/get_ready.plt)
+
+convertBitmaps(
+    TARGET ${GAME_TARGET}
+    PALETTE ${RES_DIR}/get_ready/get_ready.gpl
+    SOURCES ${RES_DIR}/get_ready/get_ready.png
+    DESTINATIONS ${DATA_DIR}/get_ready/get_ready.bm
+)
+
+convertBitmaps(
+    TARGET ${GAME_TARGET}
+    PALETTE ${GAME_PALETTE}
+    SOURCES ${RES_DIR}/hud/hud.png
+    DESTINATIONS ${DATA_DIR}/hud/hud.bm
+)
+
+add_custom_command(
+    OUTPUT ${AIM_SPRITE_PNG} ${AIM_SPRITE_PALETTE}
+    COMMAND ${PYTHON3_EXECUTABLE}
+        ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_sprite_png.py
+        --input ${RES_DIR}/sprites/aim.png
+        --output-png ${AIM_SPRITE_PNG}
+        --output-palette ${AIM_SPRITE_PALETTE}
+        --width 16
+        --height 16
+    DEPENDS
+        ${RES_DIR}/sprites/aim.png
+        ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_sprite_png.py
+)
+
+convertBitmaps(
+    TARGET ${GAME_TARGET}
+    INTERLEAVED
+    PALETTE ${AIM_SPRITE_PALETTE}
+    SOURCES ${AIM_SPRITE_PNG}
+    DESTINATIONS ${DATA_DIR}/sprites/aim.bm
+)
+
+add_custom_command(
+    OUTPUT ${PLAYER_MASKED_PNG}
+    COMMAND ${PYTHON3_EXECUTABLE}
+        ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_masked_png.py
+        --input ${RES_DIR}/player/player.png
+        --output ${PLAYER_MASKED_PNG}
+        --width 16
+        --height 240
+    DEPENDS
+        ${RES_DIR}/player/player.png
+        ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_masked_png.py
+)
+
+convertBitmaps(
+    TARGET ${GAME_TARGET}
+    INTERLEAVED
+    PALETTE ${GAME_PALETTE}
+    MASK_COLOR "#FF00FF"
+    SOURCES ${PLAYER_MASKED_PNG}
+    DESTINATIONS ${DATA_DIR}/player/player.bm
+    MASKS ${DATA_DIR}/player/player_mask.bm
+)
+
+add_custom_command(
+    OUTPUT ${OUTDOOR_TILESET_COLUMN_PNG}
+    COMMAND ${PYTHON3_EXECUTABLE}
+        ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_tileset_column.py
+        --input ${RES_DIR}/tileset/outdoor.png
+        --output ${OUTDOOR_TILESET_COLUMN_PNG}
+        --tile-width 16
+        --tile-height 16
+        --columns 7
+        --rows 5
+    DEPENDS
+        ${RES_DIR}/tileset/outdoor.png
+        ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_tileset_column.py
+)
+
+convertBitmaps(
+    TARGET ${GAME_TARGET}
+    INTERLEAVED
+    PALETTE ${GAME_PALETTE}
+    SOURCES ${OUTDOOR_TILESET_COLUMN_PNG}
+    DESTINATIONS ${DATA_DIR}/tileset/outdoor.bm
+)
 
 getToolPath(font_conv TOOL_FONT_CONV)
 add_custom_command(
