@@ -1,10 +1,7 @@
 /**
  * game – ACE boilerplate entrypoint
  *
- * To replace the scroller with your own game state:
- *   1. Delete scroller.c / scroller.h
- *   2. Create your own state file with the three callbacks
- *   3. Replace the stateChange() call below
+ * The initial state is the title screen; campaign.c routes into gameState.
  */
 
 #undef GENERIC_MAIN_LOG_PATH

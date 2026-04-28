@@ -1,17 +1,15 @@
 #ifndef SCROLLER_H
 #define SCROLLER_H
 
-#include <ace/managers/state.h>
+#include <ace/types.h>
+#include <ace/utils/extview.h>
 
 /**
- * XY tile-buffer scroller demo state.
- *
- * Map: MAP_TILES_X × MAP_TILES_Y tiles, each TILE_SIZE × TILE_SIZE pixels.
- * Controls: arrow keys / WASD scroll the camera, ESC exits.
- *
- * To remove this state from the project, delete scroller.c and scroller.h
- * and replace the stateChange() call in main.c.
+ * XY tile-buffer scroller used by gameState.
  */
-extern tState scrollerState;
+tVPort *scrollerCreate(tView *view);
+void scrollerMoveCamera(WORD dx, WORD dy);
+void scrollerProcess(void);
+void scrollerDestroy(void);
 
 #endif /* SCROLLER_H */

@@ -1,29 +1,10 @@
-/**
- * scroller.c – XY tile-buffer scrolling demo
- *
- * Map  : 128 × 128 tiles, 16 px each  →  2048 × 2048 pixel world
- * View : 320 × 256 px (PAL lores), 4 bpp (16 colours)
- * Input: arrow keys / WASD move camera, ESC exits
- *
- * Tileset is built at runtime with blitRect – no asset files needed.
- * Five distinct tile types make every map position visually unique so
- * the scrolling is immediately obvious.
- */
-
 #include "scroller.h"
 
-#include "campaign.h"
-#include "hud.h"
+#include "game.h"
 
-#include <ace/managers/key.h>
 #include <ace/managers/game.h>
 #include <ace/managers/blit.h>
-#include <ace/managers/system.h>
-#include <ace/managers/state.h>
 #include <ace/managers/viewport/tilebuffer.h>
-#include <ace/utils/extview.h>
-
-extern tStateManager *stateMgr;
 
 /* ------------------------------------------------------------------ sizes */
 
@@ -32,8 +13,6 @@ extern tStateManager *stateMgr;
 
 #define MAP_TILES_X  128
 #define MAP_TILES_Y  128
-
-#define CAM_SPEED      4   /* px per frame */
 
 /* ------------------------------------------------------------------ tiles */
 
@@ -46,7 +25,6 @@ extern tStateManager *stateMgr;
 
 /* ------------------------------------------------------------------ state */
 
-static tView              *view;
 static tVPort             *gameVport;
 static tTileBufferManager *tileBuf;
 static tBitMap            *tileSet;
@@ -88,20 +66,9 @@ static void buildMap(void) {
     }
 }
 
-/* ---------------------------------------------------- ACE state callbacks */
+/* --------------------------------------------------------------- scroller */
 
-static void scrollerCreate(void) {
-    view = viewCreate(0,
-        TAG_VIEW_GLOBAL_PALETTE, 1,
-        TAG_VIEW_GLOBAL_BPP, 1,
-#ifdef ACE_USE_AGA_FEATURES
-        TAG_VIEW_USES_AGA, 1,
-#endif
-        TAG_DONE
-    );
-
-    hudCreate(view);
-
+tVPort *scrollerCreate(tView *view) {
     gameVport = vPortCreate(0,
         TAG_VPORT_VIEW, view,
         TAG_VPORT_BPP,  GAME_BPP,
@@ -131,54 +98,20 @@ static void scrollerCreate(void) {
     cameraSetCoord(tileBuf->pCamera, 0, 0);
     tileBufferRedrawAll(tileBuf);
 
-    viewLoad(view);
-    systemUnuse();
+    return gameVport;
 }
 
-static void scrollerLoop(void) {
-    WORD dx = 0, dy = 0;
-    if (keyCheck(KEY_LEFT)  || keyCheck(KEY_A)) { dx = -CAM_SPEED; }
-    if (keyCheck(KEY_RIGHT) || keyCheck(KEY_D)) { dx =  CAM_SPEED; }
-    if (keyCheck(KEY_UP)    || keyCheck(KEY_W)) { dy = -CAM_SPEED; }
-    if (keyCheck(KEY_DOWN)  || keyCheck(KEY_S)) { dy =  CAM_SPEED; }
-
-    if (keyUse(KEY_ESCAPE)) {
-        campaignSetLevelResult(LEVEL_RESULT_EXIT_TO_TITLE);
-        stateChange(stateMgr, &campaignState);
-        return;
-    }
-
-    if (keyUse(KEY_RETURN) || keyUse(KEY_SPACE)) {
-        campaignSetLevelResult(LEVEL_RESULT_COMPLETED);
-        stateChange(stateMgr, &campaignState);
-        return;
-    }
-
+void scrollerMoveCamera(WORD dx, WORD dy) {
     cameraMoveBy(tileBuf->pCamera, dx, dy);
-    tileBufferProcess(tileBuf);
-    viewProcessManagers(view);
-    copProcessBlocks();
-    vPortWaitForEnd(gameVport);
 }
 
-static void scrollerDestroy(void) {
-    systemUse();
-    viewLoad(0);
-    viewDestroy(view);
+void scrollerProcess(void) {
+    tileBufferProcess(tileBuf);
+}
+
+void scrollerDestroy(void) {
     bitmapDestroy(tileSet);
-    hudDestroy();
-    view = 0;
     gameVport = 0;
     tileBuf = 0;
     tileSet = 0;
 }
-
-/* -------------------------------------------------- exported state struct */
-
-tState scrollerState = {
-    .cbCreate  = scrollerCreate,
-    .cbLoop    = scrollerLoop,
-    .cbDestroy = scrollerDestroy,
-    .cbSuspend = 0,
-    .cbResume  = 0,
-};

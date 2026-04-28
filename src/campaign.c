@@ -1,7 +1,7 @@
 #include "campaign.h"
 
+#include "game.h"
 #include "get_ready.h"
-#include "scroller.h"
 #include "title.h"
 
 #include <ace/managers/state.h>
@@ -112,7 +112,7 @@ static void campaignLoop(void) {
             stateChange(stateMgr, &getReadyState);
             break;
         case CAMPAIGN_ROUTE_GAMEPLAY:
-            stateChange(stateMgr, &scrollerState);
+            stateChange(stateMgr, &gameState);
             break;
         case CAMPAIGN_ROUTE_TITLE:
         case CAMPAIGN_ROUTE_GAME_OVER:
