@@ -5,6 +5,8 @@
 
 void gameCameraCreate(void);
 void gameCameraSetFocus(UWORD worldX, UWORD worldY);
+void gameCameraTrackPlayer(UWORD worldX, UWORD worldY, UBYTE isMoving);
+void gameCameraSnapToFocus(void);
 void gameCameraProcess(void);
 void gameCameraDestroy(void);
 

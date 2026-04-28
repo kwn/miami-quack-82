@@ -68,6 +68,16 @@ static void buildMap(void) {
 
 /* --------------------------------------------------------------- scroller */
 
+static UWORD clampCameraX(UWORD x) {
+    UWORD maxX = (MAP_TILES_X * TILE_SIZE) - GAME_SCREEN_W;
+    return x > maxX ? maxX : x;
+}
+
+static UWORD clampCameraY(UWORD y) {
+    UWORD maxY = (MAP_TILES_Y * TILE_SIZE) - GAME_VIEW_H;
+    return y > maxY ? maxY : y;
+}
+
 tVPort *scrollerCreate(tView *view) {
     gameVport = vPortCreate(0,
         TAG_VPORT_VIEW, view,
@@ -86,6 +96,7 @@ tVPort *scrollerCreate(tView *view) {
     tileBuf = tileBufferCreate(0,
         TAG_TILEBUFFER_VPORT,               gameVport,
         TAG_TILEBUFFER_BITMAP_FLAGS,        BMF_CLEAR | BMF_INTERLEAVED,
+        TAG_TILEBUFFER_IS_DBLBUF,           1,
         TAG_TILEBUFFER_BOUND_TILE_X,        MAP_TILES_X,
         TAG_TILEBUFFER_BOUND_TILE_Y,        MAP_TILES_Y,
         TAG_TILEBUFFER_TILE_SHIFT,          TILE_SHIFT,
@@ -106,7 +117,7 @@ void scrollerMoveCamera(WORD dx, WORD dy) {
 }
 
 void scrollerSetCamera(UWORD x, UWORD y) {
-    cameraSetCoord(tileBuf->pCamera, x, y);
+    cameraSetCoord(tileBuf->pCamera, clampCameraX(x), clampCameraY(y));
 }
 
 UWORD scrollerGetCameraX(void) {
@@ -115,6 +126,26 @@ UWORD scrollerGetCameraX(void) {
 
 UWORD scrollerGetCameraY(void) {
     return tileBuf->pCamera->uPos.uwY;
+}
+
+tBitMap *scrollerGetFrontBuffer(void) {
+    return tileBuf->pScroll->pFront;
+}
+
+tBitMap *scrollerGetBackBuffer(void) {
+    return tileBuf->pScroll->pBack;
+}
+
+UWORD scrollerGetBufferAvailHeight(void) {
+    return tileBuf->pScroll->uwBmAvailHeight;
+}
+
+UWORD scrollerGetWorldWidth(void) {
+    return MAP_TILES_X * TILE_SIZE;
+}
+
+UWORD scrollerGetWorldHeight(void) {
+    return MAP_TILES_Y * TILE_SIZE;
 }
 
 void scrollerProcess(void) {

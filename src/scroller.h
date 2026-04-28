@@ -2,6 +2,7 @@
 #define SCROLLER_H
 
 #include <ace/types.h>
+#include <ace/utils/bitmap.h>
 #include <ace/utils/extview.h>
 
 /**
@@ -12,6 +13,11 @@ void scrollerMoveCamera(WORD dx, WORD dy);
 void scrollerSetCamera(UWORD x, UWORD y);
 UWORD scrollerGetCameraX(void);
 UWORD scrollerGetCameraY(void);
+tBitMap *scrollerGetFrontBuffer(void);
+tBitMap *scrollerGetBackBuffer(void);
+UWORD scrollerGetBufferAvailHeight(void);
+UWORD scrollerGetWorldWidth(void);
+UWORD scrollerGetWorldHeight(void);
 void scrollerProcess(void);
 void scrollerDestroy(void);
 

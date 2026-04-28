@@ -4,8 +4,10 @@
 #include "campaign.h"
 #include "game_camera.h"
 #include "hud.h"
+#include "player.h"
 #include "scroller.h"
 
+#include <ace/managers/bob.h>
 #include <ace/managers/key.h>
 #include <ace/managers/system.h>
 #include <ace/managers/state.h>
@@ -29,7 +31,11 @@ static void gameCreate(void) {
     hudCreate(view);
     gameVport = scrollerCreate(view);
     aimCreate(view);
+    playerCreate();
     gameCameraCreate();
+    gameCameraSetFocus(playerGetX(), playerGetY());
+    gameCameraTrackPlayer(playerGetX(), playerGetY(), playerHasMovementInput());
+    gameCameraSnapToFocus();
 
     viewLoad(view);
     systemUnuse();
@@ -49,8 +55,13 @@ static void gameLoop(void) {
     }
 
     aimProcess();
+    playerProcess();
+    gameCameraTrackPlayer(playerGetX(), playerGetY(), playerHasMovementInput());
     gameCameraProcess();
+    bobBegin(scrollerGetBackBuffer());
     scrollerProcess();
+    playerRender();
+    bobEnd();
     viewProcessManagers(view);
     copProcessBlocks();
     vPortWaitForEnd(gameVport);
@@ -60,6 +71,7 @@ static void gameDestroy(void) {
     systemUse();
     viewLoad(0);
     gameCameraDestroy();
+    playerDestroy();
     aimDestroy();
     viewDestroy(view);
     scrollerDestroy();

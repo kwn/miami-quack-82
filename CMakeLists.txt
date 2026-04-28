@@ -22,7 +22,7 @@ endif()
 
 set(ACE_SCROLLBUFFER_ENABLE_SCROLL_X ON  CACHE BOOL "" FORCE)
 set(ACE_SCROLLBUFFER_ENABLE_SCROLL_Y ON  CACHE BOOL "" FORCE)
-set(ACE_BOB_WRAP_Y                   OFF CACHE BOOL "" FORCE)
+set(ACE_BOB_WRAP_Y                   ON  CACHE BOOL "" FORCE)
 
 add_subdirectory(deps/ace ace)
 message(STATUS "[game] GAME_USE_AGA: '${GAME_USE_AGA}'")
@@ -61,12 +61,14 @@ set(GET_READY_OCS_PALETTE ${DATA_DIR}/get_ready/get_ready_ocs.gpl)
 set(GAME_PALETTE ${RES_DIR}/jehkoba32_ecs.gpl)
 set(AIM_SPRITE_PNG ${DATA_DIR}/sprites/aim_hw.png)
 set(AIM_SPRITE_PALETTE ${DATA_DIR}/sprites/aim.gpl)
+set(PLAYER_MASKED_PNG ${DATA_DIR}/player/player_masked.png)
 
 file(MAKE_DIRECTORY
     ${DATA_DIR}/title
     ${DATA_DIR}/get_ready
     ${DATA_DIR}/game
     ${DATA_DIR}/hud
+    ${DATA_DIR}/player
     ${DATA_DIR}/sprites
     ${DATA_DIR}/fonts
 )
@@ -209,6 +211,32 @@ if(EXISTS ${RES_DIR}/sprites/aim.png)
         PALETTE ${AIM_SPRITE_PALETTE}
         SOURCES ${AIM_SPRITE_PNG}
         DESTINATIONS ${DATA_DIR}/sprites/aim.bm
+    )
+endif()
+
+if(EXISTS ${RES_DIR}/player/player.png)
+    find_program(PYTHON3_EXECUTABLE python3 REQUIRED)
+    add_custom_command(
+        OUTPUT ${PLAYER_MASKED_PNG}
+        COMMAND ${PYTHON3_EXECUTABLE}
+            ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_masked_png.py
+            --input ${RES_DIR}/player/player.png
+            --output ${PLAYER_MASKED_PNG}
+            --width 16
+            --height 240
+        DEPENDS
+            ${RES_DIR}/player/player.png
+            ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_masked_png.py
+    )
+
+    convertBitmaps(
+        TARGET ${GAME_TARGET}
+        INTERLEAVED
+        PALETTE ${GAME_PALETTE}
+        MASK_COLOR "#FF00FF"
+        SOURCES ${PLAYER_MASKED_PNG}
+        DESTINATIONS ${DATA_DIR}/player/player.bm
+        MASKS ${DATA_DIR}/player/player_mask.bm
     )
 endif()
 
