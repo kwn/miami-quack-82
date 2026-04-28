@@ -1,9 +1,11 @@
 #include "scroller.h"
 
 #include "game.h"
+#include "map.h"
+#include "map_generator.h"
 
-#include <ace/managers/game.h>
 #include <ace/managers/blit.h>
+#include <ace/managers/game.h>
 #include <ace/managers/viewport/tilebuffer.h>
 
 /* ------------------------------------------------------------------ sizes */
@@ -11,57 +13,30 @@
 #define TILE_SHIFT     4   /* 1 << 4 = 16 px per tile */
 #define TILE_SIZE     16
 
-#define MAP_TILES_X  128
-#define MAP_TILES_Y  128
-
-/* ------------------------------------------------------------------ tiles */
-
-#define TILE_GRASS   0
-#define TILE_DIRT    1
-#define TILE_WATER   2
-#define TILE_STONE   3
-#define TILE_SAND    4
-#define TILE_COUNT   5
-
 /* ------------------------------------------------------------------ state */
 
 static tVPort             *gameVport;
 static tTileBufferManager *tileBuf;
 static tBitMap            *tileSet;
 
-/* --------------------------------------------------------- tileset builder */
+static void copyBackBufferToFront(void) {
+    UWORD *src = (UWORD *)tileBuf->pScroll->pBack->Planes[0];
+    UWORD *dst = (UWORD *)tileBuf->pScroll->pFront->Planes[0];
+    ULONG wordsToCopy = (tileBuf->pScroll->pFront->BytesPerRow * tileBuf->pScroll->pFront->Rows) / sizeof(UWORD);
 
-static void buildTileSet(void) {
-    tileSet = bitmapCreate(
-        TILE_SIZE,
-        TILE_SIZE * TILE_COUNT,
-        GAME_BPP,
-        BMF_CLEAR | BMF_INTERLEAVED
-    );
-
-    for (UBYTE t = 0; t < TILE_COUNT; ++t) {
-        UWORD base = TILE_SIZE * t;
-        blitRect(tileSet, 0, base,     TILE_SIZE, TILE_SIZE, t);     /* base colour  */
-        blitRect(tileSet, 0, base + 4, TILE_SIZE, 2,         t + 5); /* horiz band   */
-        blitRect(tileSet, 4, base,     2,         TILE_SIZE, t + 5); /* vert stripe  */
+    blitWait();
+    while (wordsToCopy--) {
+        *dst++ = *src++;
     }
 }
 
-/* ----------------------------------------------------------- map generator */
-
-static UBYTE tileAt(UWORD x, UWORD y) {
-    UWORD v = (x * 7u + y * 13u + (x ^ y) * 3u) & 0xFFu;
-    if      (v < 80)  return TILE_GRASS;
-    else if (v < 130) return TILE_DIRT;
-    else if (v < 170) return TILE_SAND;
-    else if (v < 210) return TILE_STONE;
-    else              return TILE_WATER;
-}
-
 static void buildMap(void) {
-    for (UWORD x = 0; x < MAP_TILES_X; ++x) {
-        for (UWORD y = 0; y < MAP_TILES_Y; ++y) {
-            tileBuf->pTileData[x][y] = tileAt(x, y);
+    mapGeneratorSetSeed(0x19820827);
+    mapGeneratorGenerateOutdoor();
+
+    for (UWORD x = 0; x < MAP_W; ++x) {
+        for (UWORD y = 0; y < MAP_H; ++y) {
+            tileBuf->pTileData[x][y] = mapData[y * MAP_W + x];
         }
     }
 }
@@ -69,12 +44,12 @@ static void buildMap(void) {
 /* --------------------------------------------------------------- scroller */
 
 static UWORD clampCameraX(UWORD x) {
-    UWORD maxX = (MAP_TILES_X * TILE_SIZE) - GAME_SCREEN_W;
+    UWORD maxX = (MAP_W * TILE_SIZE) - GAME_SCREEN_W;
     return x > maxX ? maxX : x;
 }
 
 static UWORD clampCameraY(UWORD y) {
-    UWORD maxY = (MAP_TILES_Y * TILE_SIZE) - GAME_VIEW_H;
+    UWORD maxY = (MAP_H * TILE_SIZE) - GAME_VIEW_H;
     return y > maxY ? maxY : y;
 }
 
@@ -91,14 +66,14 @@ tVPort *scrollerCreate(tView *view) {
         TAG_DONE
     );
 
-    buildTileSet();
+    tileSet = bitmapCreateFromPath("data/tileset/outdoor.bm", 0);
 
     tileBuf = tileBufferCreate(0,
         TAG_TILEBUFFER_VPORT,               gameVport,
         TAG_TILEBUFFER_BITMAP_FLAGS,        BMF_CLEAR | BMF_INTERLEAVED,
         TAG_TILEBUFFER_IS_DBLBUF,           1,
-        TAG_TILEBUFFER_BOUND_TILE_X,        MAP_TILES_X,
-        TAG_TILEBUFFER_BOUND_TILE_Y,        MAP_TILES_Y,
+        TAG_TILEBUFFER_BOUND_TILE_X,        MAP_W,
+        TAG_TILEBUFFER_BOUND_TILE_Y,        MAP_H,
         TAG_TILEBUFFER_TILE_SHIFT,          TILE_SHIFT,
         TAG_TILEBUFFER_TILESET,             tileSet,
         TAG_TILEBUFFER_REDRAW_QUEUE_LENGTH, 100,
@@ -107,7 +82,6 @@ tVPort *scrollerCreate(tView *view) {
 
     buildMap();
     cameraSetCoord(tileBuf->pCamera, 0, 0);
-    tileBufferRedrawAll(tileBuf);
 
     return gameVport;
 }
@@ -118,6 +92,11 @@ void scrollerMoveCamera(WORD dx, WORD dy) {
 
 void scrollerSetCamera(UWORD x, UWORD y) {
     cameraSetCoord(tileBuf->pCamera, clampCameraX(x), clampCameraY(y));
+}
+
+void scrollerRedrawAll(void) {
+    tileBufferRedrawAll(tileBuf);
+    copyBackBufferToFront();
 }
 
 UWORD scrollerGetCameraX(void) {
@@ -141,11 +120,11 @@ UWORD scrollerGetBufferAvailHeight(void) {
 }
 
 UWORD scrollerGetWorldWidth(void) {
-    return MAP_TILES_X * TILE_SIZE;
+    return MAP_W * TILE_SIZE;
 }
 
 UWORD scrollerGetWorldHeight(void) {
-    return MAP_TILES_Y * TILE_SIZE;
+    return MAP_H * TILE_SIZE;
 }
 
 void scrollerProcess(void) {

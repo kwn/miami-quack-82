@@ -11,6 +11,7 @@
 tVPort *scrollerCreate(tView *view);
 void scrollerMoveCamera(WORD dx, WORD dy);
 void scrollerSetCamera(UWORD x, UWORD y);
+void scrollerRedrawAll(void);
 UWORD scrollerGetCameraX(void);
 UWORD scrollerGetCameraY(void);
 tBitMap *scrollerGetFrontBuffer(void);

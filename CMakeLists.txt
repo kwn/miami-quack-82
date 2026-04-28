@@ -62,6 +62,7 @@ set(GAME_PALETTE ${RES_DIR}/jehkoba32_ecs.gpl)
 set(AIM_SPRITE_PNG ${DATA_DIR}/sprites/aim_hw.png)
 set(AIM_SPRITE_PALETTE ${DATA_DIR}/sprites/aim.gpl)
 set(PLAYER_MASKED_PNG ${DATA_DIR}/player/player_masked.png)
+set(OUTDOOR_TILESET_COLUMN_PNG ${DATA_DIR}/tileset/outdoor_column.png)
 
 file(MAKE_DIRECTORY
     ${DATA_DIR}/title
@@ -70,6 +71,7 @@ file(MAKE_DIRECTORY
     ${DATA_DIR}/hud
     ${DATA_DIR}/player
     ${DATA_DIR}/sprites
+    ${DATA_DIR}/tileset
     ${DATA_DIR}/fonts
 )
 
@@ -237,6 +239,32 @@ if(EXISTS ${RES_DIR}/player/player.png)
         SOURCES ${PLAYER_MASKED_PNG}
         DESTINATIONS ${DATA_DIR}/player/player.bm
         MASKS ${DATA_DIR}/player/player_mask.bm
+    )
+endif()
+
+if(EXISTS ${RES_DIR}/tileset/outdoor.png)
+    find_program(PYTHON3_EXECUTABLE python3 REQUIRED)
+    add_custom_command(
+        OUTPUT ${OUTDOOR_TILESET_COLUMN_PNG}
+        COMMAND ${PYTHON3_EXECUTABLE}
+            ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_tileset_column.py
+            --input ${RES_DIR}/tileset/outdoor.png
+            --output ${OUTDOOR_TILESET_COLUMN_PNG}
+            --tile-width 16
+            --tile-height 16
+            --columns 7
+            --rows 5
+        DEPENDS
+            ${RES_DIR}/tileset/outdoor.png
+            ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_tileset_column.py
+    )
+
+    convertBitmaps(
+        TARGET ${GAME_TARGET}
+        INTERLEAVED
+        PALETTE ${GAME_PALETTE}
+        SOURCES ${OUTDOOR_TILESET_COLUMN_PNG}
+        DESTINATIONS ${DATA_DIR}/tileset/outdoor.bm
     )
 endif()
 

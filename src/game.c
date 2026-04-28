@@ -36,6 +36,7 @@ static void gameCreate(void) {
     gameCameraSetFocus(playerGetX(), playerGetY());
     gameCameraTrackPlayer(playerGetX(), playerGetY(), playerHasMovementInput());
     gameCameraSnapToFocus();
+    scrollerRedrawAll();
 
     viewLoad(view);
     systemUnuse();
