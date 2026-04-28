@@ -1,19 +1,30 @@
 #include "map_generator.h"
 
-static ULONG mapSeed = 0x12345678;
+#include <ace/managers/rand.h>
+
+static tRandManager mapRand;
 
 void mapGeneratorSetSeed(ULONG seed) {
-    mapSeed = seed ? seed : 0x12345678;
+    UWORD seed1 = (UWORD)(seed >> 16);
+    UWORD seed2 = (UWORD)seed;
+
+    if (!seed1) {
+        seed1 = 0x1234;
+    }
+    if (!seed2) {
+        seed2 = 0x5678;
+    }
+
+    randInit(&mapRand, seed1, seed2);
 }
 
 ULONG mapGeneratorRand(void) {
-    mapSeed = mapSeed * 1664525u + 1013904223u;
-    return mapSeed;
+    return randUl(&mapRand);
 }
 
 int mapGeneratorRandRange(int min, int max) {
     if (min >= max) {
         return min;
     }
-    return min + ((mapGeneratorRand() >> 16) % (max - min));
+    return min + randUwMax(&mapRand, (UWORD)(max - min - 1));
 }

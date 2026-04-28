@@ -27,6 +27,11 @@ set(ACE_BOB_WRAP_Y                   ON  CACHE BOOL "" FORCE)
 add_subdirectory(deps/ace ace)
 message(STATUS "[game] GAME_USE_AGA: '${GAME_USE_AGA}'")
 
+# Match the original game's optimization level while keeping the selected CPU
+# from the active toolchain/CMake preset.
+set(GAME_OPT_FLAGS -Ofast)
+target_compile_options(ace PRIVATE ${GAME_OPT_FLAGS})
+
 # ---- Game sources ----------------------------------------------------------
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*.c src/*.h)
 
@@ -49,7 +54,7 @@ else()
 endif()
 
 target_include_directories(${GAME_TARGET} PRIVATE ${PROJECT_SOURCE_DIR}/src)
-target_compile_options(${GAME_TARGET} PRIVATE -Wall -Wextra -Wno-unused-parameter)
+target_compile_options(${GAME_TARGET} PRIVATE -Wall -Wextra -Wno-unused-parameter ${GAME_OPT_FLAGS})
 target_link_options(${GAME_TARGET} PRIVATE -Wl,--emit-relocs,--gc-sections,-Ttext=0)
 target_link_libraries(${GAME_TARGET} ace)
 
