@@ -1,5 +1,12 @@
 # LLM context
 
+## Project context
+- This project is a step-by-step reimplementation of the original Amiga game from the sibling `game` folder.
+- The goal is to rebuild the game on top of ACE, using ACE managers and tooling wherever possible instead of porting old custom low-level code directly.
+- The game is a top-down shooter with scrolling maps, hardware-sprite aiming, a BOB-based player, HUD, campaign/stage flow, and generated or authored level maps.
+- The codebase should remain ECS-compatible while also being AGA-ready when built against an AGA-capable ACE fork.
+- Prefer small, incremental changes that keep the current playable prototype working.
+
 ## Naming
 No Hungarian notation. Plain names: `view`, `tileBuf`, `dx`, `stateMgr`.
 ACE API unchanged: `tView`, `UWORD`, `TAG_*`, `KEY_*`, `BMF_*` etc.
