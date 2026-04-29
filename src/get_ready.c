@@ -11,7 +11,6 @@
 #include <ace/managers/system.h>
 #include <ace/managers/viewport/simplebuffer.h>
 #include <ace/utils/bitmap.h>
-#include <ace/utils/disk_file.h>
 #include <ace/utils/extview.h>
 #include <ace/utils/font.h>
 #include <ace/utils/palette.h>
@@ -26,10 +25,6 @@ extern tStateManager *stateMgr;
 #define GET_READY_BLACK_LEVEL 0
 #define GET_READY_AUTO_ADVANCE_FRAMES 150
 
-#define COLOR_TEXT 29
-#define COLOR_SHADOW 23
-#define COLOR_BACKGROUND 0
-
 static tView *view;
 static tVPort *vport;
 static tSimpleBufferManager *buffer;
@@ -43,17 +38,6 @@ static ULONG pristinePalette[GET_READY_COLOR_COUNT];
 #else
 static UWORD pristinePalette[GET_READY_COLOR_COUNT];
 #endif
-
-static void setPristineColor(UBYTE index, UWORD color) {
-#ifdef ACE_USE_AGA_FEATURES
-    UBYTE r = (color >> 8) & 0xF;
-    UBYTE g = (color >> 4) & 0xF;
-    UBYTE b = color & 0xF;
-    pristinePalette[index] = ((ULONG)(r * 17) << 16) | ((ULONG)(g * 17) << 8) | (b * 17);
-#else
-    pristinePalette[index] = color;
-#endif
-}
 
 static void setPaletteLevel(UBYTE level) {
 #ifdef ACE_USE_AGA_FEATURES
@@ -78,12 +62,8 @@ static void fadePaletteLevel(BYTE fromLevel, BYTE toLevel) {
     }
 }
 
-static UBYTE loadGetReadyImage(void) {
+static void loadGetReadyImage(void) {
     const LevelDefinition *level = campaignGetCurrentLevel();
-
-    if (!diskFileExists(level->getReadyImagePath) || !diskFileExists(level->getReadyPalettePath)) {
-        return 0;
-    }
 
 #ifdef ACE_USE_AGA_FEATURES
     paletteLoadFromPath(level->getReadyPalettePath, (UWORD *)pristinePalette, GET_READY_COLOR_COUNT);
@@ -91,28 +71,7 @@ static UBYTE loadGetReadyImage(void) {
     paletteLoadFromPath(level->getReadyPalettePath, pristinePalette, GET_READY_COLOR_COUNT);
 #endif
     image = bitmapCreateFromPath(level->getReadyImagePath, 0);
-    if (!image) {
-        return 0;
-    }
-
     blitCopyAligned(image, 0, 0, buffer->pBack, 0, 0, SCREEN_W, SCREEN_H);
-    blitWait();
-    return 1;
-}
-
-static void drawFallbackScreen(void) {
-    const WorldDefinition *world = campaignGetCurrentWorld();
-    const LevelDefinition *level = campaignGetCurrentLevel();
-
-    setPristineColor(0, 0x000);
-    setPristineColor(COLOR_TEXT, 0xFEA);
-    setPristineColor(COLOR_SHADOW, 0x622);
-
-    blitRect(buffer->pBack, 0, 0, SCREEN_W, SCREEN_H, COLOR_BACKGROUND);
-    gameFontDrawStr(font, buffer->pBack, textBitmap, 105, 86, "GET READY", COLOR_TEXT, COLOR_SHADOW);
-    gameFontDrawStr(font, buffer->pBack, textBitmap, 104, 116, world->name, COLOR_TEXT, COLOR_SHADOW);
-    gameFontDrawStr(font, buffer->pBack, textBitmap, 104, 136, level->name, COLOR_TEXT, COLOR_SHADOW);
-    gameFontDrawStr(font, buffer->pBack, textBitmap, 72, 190, "FIRE / SPACE TO START", COLOR_TEXT, COLOR_SHADOW);
     blitWait();
 }
 
@@ -147,9 +106,7 @@ static void getReadyCreate(void) {
     font = fontCreateFromPath("data/fonts/quaver.fnt");
     textBitmap = fontCreateTextBitMap(200, 16);
 
-    if (!loadGetReadyImage()) {
-        drawFallbackScreen();
-    }
+    loadGetReadyImage();
 
     frameCounter = 0;
     setPaletteLevel(GET_READY_BLACK_LEVEL);
