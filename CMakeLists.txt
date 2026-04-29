@@ -138,7 +138,6 @@ else()
         COMMAND ${TOOL_PALETTE_CONV}
             ${TITLE_OCS_PALETTE}
             ${DATA_DIR}/title/title.plt
-            --legacy
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         DEPENDS ${TITLE_OCS_PALETTE}
     )
@@ -161,7 +160,6 @@ else()
         COMMAND ${TOOL_PALETTE_CONV}
             ${GAME_PALETTE}
             ${DATA_DIR}/game/game.plt
-            --legacy
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         DEPENDS ${GAME_PALETTE}
     )
@@ -201,7 +199,6 @@ else()
         COMMAND ${TOOL_PALETTE_CONV}
             ${GET_READY_OCS_PALETTE}
             ${DATA_DIR}/get_ready/get_ready.plt
-            --legacy
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         DEPENDS ${GET_READY_OCS_PALETTE}
     )
