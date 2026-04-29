@@ -36,3 +36,8 @@ configure: $(BUILD_DIR)/Makefile
 
 clean:
 	rm -rf $(BUILD_DIR)
+
+push:
+	git remote add origin git@github.com:kwn/miami-quack-82.git
+	git push origin main
+	git remote remove origin
