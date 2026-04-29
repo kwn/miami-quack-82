@@ -2,6 +2,7 @@
 
 #include "campaign.h"
 #include "font.h"
+#include "map_generator.h"
 
 #include <ace/managers/blit.h>
 #include <ace/managers/joy.h>
@@ -155,6 +156,8 @@ static void getReadyCreate(void) {
     viewLoad(view);
     fadePaletteLevel(GET_READY_BLACK_LEVEL, GET_READY_FULL_LEVEL);
     systemUnuse();
+    mapGeneratorSetSeed(0x19820827);
+    mapGeneratorGenerateOutdoor();
 }
 
 static void getReadyLoop(void) {

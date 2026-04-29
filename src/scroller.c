@@ -2,7 +2,6 @@
 
 #include "game.h"
 #include "map.h"
-#include "map_generator.h"
 
 #include <ace/managers/blit.h>
 #include <ace/managers/game.h>
@@ -28,9 +27,6 @@ static void onTileDraw(UWORD tileX, UWORD tileY, tBitMap *bitmap, UWORD bitmapX,
 }
 
 static void buildMap(void) {
-    mapGeneratorSetSeed(0x19820827);
-    mapGeneratorGenerateOutdoor();
-
     for (UWORD x = 0; x < MAP_W; ++x) {
         for (UWORD y = 0; y < MAP_H; ++y) {
             tileBuf->pTileData[x][y] = mapData[y * MAP_W + x];
