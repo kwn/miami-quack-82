@@ -31,7 +31,7 @@ tVPort *hudCreate(tView *view) {
         TAG_VPORT_HEIGHT, HUD_H,
 #ifdef ACE_USE_AGA_FEATURES
         TAG_VPORT_USES_AGA, 1,
-        TAG_VPORT_FMODE, 0,
+        TAG_VPORT_FMODE, GAME_AGA_FMODE,
 #endif
         TAG_DONE
     );
