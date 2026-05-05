@@ -17,7 +17,7 @@ static void loadPalette(void) {
 }
 
 static void drawBackground(void) {
-    tBitMap *hudBitmap = bitmapCreateFromPath("data/hud/hud.bm", 0);
+    tBitMap *hudBitmap = bitmapCreateFromPath("data/bitmaps/hud.bm", 0);
     blitCopyAligned(hudBitmap, 0, 0, hudBuffer->pBack, 0, 0, GAME_SCREEN_W, HUD_H);
     blitWait();
     bitmapDestroy(hudBitmap);

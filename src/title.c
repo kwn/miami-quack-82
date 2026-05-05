@@ -463,7 +463,7 @@ static void titleCreate(void) {
 #else
     paletteLoadFromPath("data/palettes/title.plt", pristinePalette, TITLE_COLOR_COUNT);
 #endif
-    titleBitmap = bitmapCreateFromPath("data/title/title.bm", 0);
+    titleBitmap = bitmapCreateFromPath("data/bitmaps/title.bm", 0);
     menuBaseBitmap = bitmapCreate(MENU_BOX_W, MENU_BOX_H, TITLE_BPP, BMF_CLEAR);
     menuDrawBitmap = bitmapCreate(MENU_BOX_W, MENU_BOX_H, TITLE_BPP, BMF_CLEAR);
     buildMenuBaseBitmap();

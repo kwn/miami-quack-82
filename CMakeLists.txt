@@ -117,11 +117,13 @@ target_link_libraries(${GAME_TARGET} ace)
 # ---- Asset conversion -------------------------------------------------------
 set(RES_DIR ${CMAKE_CURRENT_LIST_DIR}/res)
 set(DATA_DIR ${CMAKE_CURRENT_BINARY_DIR}/data)
-set(GAME_PALETTE_SOURCE ${RES_DIR}/jehkoba32_ecs.gpl)
+set(BITMAPS_DIR ${RES_DIR}/bitmaps)
+set(PALETTES_DIR ${RES_DIR}/palettes)
+set(GAME_PALETTE_SOURCE ${RES_DIR}/palettes/game.gpl)
 set(GAME_PALETTE ${DATA_DIR}/palettes/game.plt)
-set(TITLE_PALETTE_SOURCE ${RES_DIR}/title/title.gpl)
+set(TITLE_PALETTE_SOURCE ${PALETTES_DIR}/title.gpl)
 set(TITLE_PALETTE ${DATA_DIR}/palettes/title.plt)
-set(GET_READY_PALETTE_SOURCE ${RES_DIR}/get_ready/get_ready.gpl)
+set(GET_READY_PALETTE_SOURCE ${PALETTES_DIR}/get_ready.gpl)
 set(GET_READY_PALETTE ${DATA_DIR}/palettes/get_ready.plt)
 set(AIM_SPRITE_PNG ${DATA_DIR}/sprites/aim_hw.png)
 set(AIM_SPRITE_PALETTE ${DATA_DIR}/sprites/aim.gpl)
@@ -151,8 +153,10 @@ else()
 endif()
 
 function(addPaletteAsset PALETTE_SOURCE PALETTE_DESTINATION)
+    get_filename_component(PALETTE_DESTINATION_DIR ${PALETTE_DESTINATION} DIRECTORY)
     get_filename_component(PALETTE_NAME ${PALETTE_DESTINATION} NAME_WE)
-    set(PALETTE_PREPARED_GPL ${DATA_DIR}/palettes/${PALETTE_NAME}.gpl)
+    set(PALETTE_PREPARED_GPL ${PALETTE_DESTINATION_DIR}/${PALETTE_NAME}.gpl)
+    file(MAKE_DIRECTORY ${PALETTE_DESTINATION_DIR})
 
     add_custom_command(
         OUTPUT ${PALETTE_PREPARED_GPL}
@@ -187,6 +191,23 @@ function(addBitmapAsset PALETTE_SOURCE BITMAP_SOURCE BITMAP_DESTINATION)
     )
 endfunction()
 
+function(addBitmapResources BITMAP_SOURCE_DIR BITMAP_DESTINATION_DIR)
+    file(GLOB BITMAP_SOURCES CONFIGURE_DEPENDS ${BITMAP_SOURCE_DIR}/*.png)
+    foreach(BITMAP_SOURCE IN LISTS BITMAP_SOURCES)
+        get_filename_component(BITMAP_NAME ${BITMAP_SOURCE} NAME_WE)
+        set(BITMAP_PALETTE_SOURCE ${PALETTES_DIR}/${BITMAP_NAME}.gpl)
+        if(NOT EXISTS ${BITMAP_PALETTE_SOURCE})
+            set(BITMAP_PALETTE_SOURCE ${GAME_PALETTE_SOURCE})
+        endif()
+
+        addBitmapAsset(
+            ${BITMAP_PALETTE_SOURCE}
+            ${BITMAP_SOURCE}
+            ${BITMAP_DESTINATION_DIR}/${BITMAP_NAME}.bm
+        )
+    endforeach()
+endfunction()
+
 function(addInterleavedBitmapAsset PALETTE_SOURCE BITMAP_SOURCE BITMAP_DESTINATION)
     convertBitmaps(
         TARGET ${GAME_TARGET}
@@ -211,23 +232,7 @@ endfunction()
 
 # ---- Game resources ---------------------------------------------------------
 
-addBitmapAsset(
-    ${TITLE_PALETTE_SOURCE}
-    ${RES_DIR}/title/title.png
-    ${DATA_DIR}/title/title.bm
-)
-
-addBitmapAsset(
-    ${GET_READY_PALETTE_SOURCE}
-    ${RES_DIR}/get_ready/get_ready.png
-    ${DATA_DIR}/get_ready/get_ready.bm
-)
-
-addBitmapAsset(
-    ${GAME_PALETTE_SOURCE}
-    ${RES_DIR}/hud/hud.png
-    ${DATA_DIR}/hud/hud.bm
-)
+addBitmapResources(${BITMAPS_DIR} ${DATA_DIR}/bitmaps)
 
 add_custom_command(
     OUTPUT ${AIM_SPRITE_PNG} ${AIM_SPRITE_PALETTE}

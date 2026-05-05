@@ -13,14 +13,14 @@ static const LevelDefinition boulevardLevels[] = {
         "BULWAR 1",
         OBJECTIVE_KILL_ALL,
         0,
-        "data/get_ready/get_ready.bm",
+        "data/bitmaps/get_ready.bm",
         "data/palettes/get_ready.plt"
     },
     {
         "BULWAR 2",
         OBJECTIVE_COLLECT_ITEM,
         1,
-        "data/get_ready/get_ready.bm",
+        "data/bitmaps/get_ready.bm",
         "data/palettes/get_ready.plt"
     },
 };
