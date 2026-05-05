@@ -117,9 +117,12 @@ target_link_libraries(${GAME_TARGET} ace)
 # ---- Asset conversion -------------------------------------------------------
 set(RES_DIR ${CMAKE_CURRENT_LIST_DIR}/res)
 set(DATA_DIR ${CMAKE_CURRENT_BINARY_DIR}/data)
-set(TITLE_OCS_PALETTE ${DATA_DIR}/title/title_ocs.gpl)
-set(GET_READY_OCS_PALETTE ${DATA_DIR}/get_ready/get_ready_ocs.gpl)
-set(GAME_PALETTE ${RES_DIR}/jehkoba32_ecs.gpl)
+set(GAME_PALETTE_SOURCE ${RES_DIR}/jehkoba32_ecs.gpl)
+set(GAME_PALETTE ${DATA_DIR}/palettes/game.plt)
+set(TITLE_PALETTE_SOURCE ${RES_DIR}/title/title.gpl)
+set(TITLE_PALETTE ${DATA_DIR}/palettes/title.plt)
+set(GET_READY_PALETTE_SOURCE ${RES_DIR}/get_ready/get_ready.gpl)
+set(GET_READY_PALETTE ${DATA_DIR}/palettes/get_ready.plt)
 set(AIM_SPRITE_PNG ${DATA_DIR}/sprites/aim_hw.png)
 set(AIM_SPRITE_PALETTE ${DATA_DIR}/sprites/aim.gpl)
 set(PLAYER_MASKED_PNG ${DATA_DIR}/player/player_masked.png)
@@ -128,7 +131,7 @@ set(OUTDOOR_TILESET_COLUMN_PNG ${DATA_DIR}/tileset/outdoor_column.png)
 file(MAKE_DIRECTORY
     ${DATA_DIR}/title
     ${DATA_DIR}/get_ready
-    ${DATA_DIR}/game
+    ${DATA_DIR}/palettes
     ${DATA_DIR}/hud
     ${DATA_DIR}/player
     ${DATA_DIR}/sprites
@@ -136,113 +139,66 @@ file(MAKE_DIRECTORY
     ${DATA_DIR}/fonts
 )
 
-add_custom_command(
-    OUTPUT ${TITLE_OCS_PALETTE}
-    COMMAND ${CMAKE_COMMAND}
-        -DINPUT=${RES_DIR}/title/title.gpl
-        -DOUTPUT=${TITLE_OCS_PALETTE}
-        -P ${CMAKE_CURRENT_LIST_DIR}/cmake/gpl_to_ocs.cmake
-    DEPENDS
-        ${RES_DIR}/title/title.gpl
-        ${CMAKE_CURRENT_LIST_DIR}/cmake/gpl_to_ocs.cmake
-)
-
 getToolPath(palette_conv TOOL_PALETTE_CONV)
 find_program(PYTHON3_EXECUTABLE python3 REQUIRED)
 
 if(GAME_USE_AGA)
-    add_custom_command(
-        OUTPUT ${DATA_DIR}/title/title.plt
-        COMMAND ${TOOL_PALETTE_CONV}
-            ${RES_DIR}/title/title.gpl
-            ${DATA_DIR}/title/title.plt
-            -aga
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        DEPENDS ${RES_DIR}/title/title.gpl
-    )
+    set(GAME_PALETTE_MODE AGA)
+    set(GAME_PALETTE_CONV_FLAGS -aga)
 else()
-    add_custom_command(
-        OUTPUT ${DATA_DIR}/title/title.plt
-        COMMAND ${TOOL_PALETTE_CONV}
-            ${TITLE_OCS_PALETTE}
-            ${DATA_DIR}/title/title.plt
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        DEPENDS ${TITLE_OCS_PALETTE}
-    )
+    set(GAME_PALETTE_MODE OCS)
+    set(GAME_PALETTE_CONV_FLAGS)
 endif()
-target_sources(${GAME_TARGET} PUBLIC ${DATA_DIR}/title/title.plt)
 
-if(GAME_USE_AGA)
+function(addPaletteAsset PALETTE_SOURCE PALETTE_DESTINATION)
+    get_filename_component(PALETTE_NAME ${PALETTE_DESTINATION} NAME_WE)
+    set(PALETTE_PREPARED_GPL ${DATA_DIR}/palettes/${PALETTE_NAME}.gpl)
+
     add_custom_command(
-        OUTPUT ${DATA_DIR}/game/game.plt
-        COMMAND ${TOOL_PALETTE_CONV}
-            ${GAME_PALETTE}
-            ${DATA_DIR}/game/game.plt
-            -aga
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        DEPENDS ${GAME_PALETTE}
+        OUTPUT ${PALETTE_PREPARED_GPL}
+        COMMAND ${PYTHON3_EXECUTABLE}
+            ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_palette.py
+            --input ${PALETTE_SOURCE}
+            --output ${PALETTE_PREPARED_GPL}
+            --mode ${GAME_PALETTE_MODE}
+        DEPENDS
+            ${PALETTE_SOURCE}
+            ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_palette.py
     )
-else()
+
     add_custom_command(
-        OUTPUT ${DATA_DIR}/game/game.plt
+        OUTPUT ${PALETTE_DESTINATION}
         COMMAND ${TOOL_PALETTE_CONV}
-            ${GAME_PALETTE}
-            ${DATA_DIR}/game/game.plt
+            ${PALETTE_PREPARED_GPL}
+            ${PALETTE_DESTINATION}
+            ${GAME_PALETTE_CONV_FLAGS}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        DEPENDS ${GAME_PALETTE}
+        DEPENDS ${PALETTE_PREPARED_GPL}
     )
-endif()
-target_sources(${GAME_TARGET} PUBLIC ${DATA_DIR}/game/game.plt)
+    target_sources(${GAME_TARGET} PUBLIC ${PALETTE_DESTINATION})
+endfunction()
+
+addPaletteAsset(${GAME_PALETTE_SOURCE} ${GAME_PALETTE})
+addPaletteAsset(${TITLE_PALETTE_SOURCE} ${TITLE_PALETTE})
+addPaletteAsset(${GET_READY_PALETTE_SOURCE} ${GET_READY_PALETTE})
 
 convertBitmaps(
     TARGET ${GAME_TARGET}
-    PALETTE ${RES_DIR}/title/title.gpl
+    PALETTE ${TITLE_PALETTE_SOURCE}
     SOURCES ${RES_DIR}/title/title.png
     DESTINATIONS ${DATA_DIR}/title/title.bm
 )
 
-if(GAME_USE_AGA)
-    add_custom_command(
-        OUTPUT ${DATA_DIR}/get_ready/get_ready.plt
-        COMMAND ${TOOL_PALETTE_CONV}
-            ${RES_DIR}/get_ready/get_ready.gpl
-            ${DATA_DIR}/get_ready/get_ready.plt
-            -aga
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        DEPENDS ${RES_DIR}/get_ready/get_ready.gpl
-    )
-else()
-    add_custom_command(
-        OUTPUT ${GET_READY_OCS_PALETTE}
-        COMMAND ${CMAKE_COMMAND}
-            -DINPUT=${RES_DIR}/get_ready/get_ready.gpl
-            -DOUTPUT=${GET_READY_OCS_PALETTE}
-            -P ${CMAKE_CURRENT_LIST_DIR}/cmake/gpl_to_ocs.cmake
-        DEPENDS
-            ${RES_DIR}/get_ready/get_ready.gpl
-            ${CMAKE_CURRENT_LIST_DIR}/cmake/gpl_to_ocs.cmake
-    )
-    add_custom_command(
-        OUTPUT ${DATA_DIR}/get_ready/get_ready.plt
-        COMMAND ${TOOL_PALETTE_CONV}
-            ${GET_READY_OCS_PALETTE}
-            ${DATA_DIR}/get_ready/get_ready.plt
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        DEPENDS ${GET_READY_OCS_PALETTE}
-    )
-endif()
-target_sources(${GAME_TARGET} PUBLIC ${DATA_DIR}/get_ready/get_ready.plt)
-
 convertBitmaps(
     TARGET ${GAME_TARGET}
-    PALETTE ${RES_DIR}/get_ready/get_ready.gpl
+    PALETTE ${GET_READY_PALETTE_SOURCE}
     SOURCES ${RES_DIR}/get_ready/get_ready.png
     DESTINATIONS ${DATA_DIR}/get_ready/get_ready.bm
 )
 
 convertBitmaps(
     TARGET ${GAME_TARGET}
-    PALETTE ${GAME_PALETTE}
+    PALETTE ${GAME_PALETTE_SOURCE}
     SOURCES ${RES_DIR}/hud/hud.png
     DESTINATIONS ${DATA_DIR}/hud/hud.bm
 )
@@ -285,7 +241,7 @@ add_custom_command(
 convertBitmaps(
     TARGET ${GAME_TARGET}
     INTERLEAVED
-    PALETTE ${GAME_PALETTE}
+    PALETTE ${GAME_PALETTE_SOURCE}
     MASK_COLOR "#FF00FF"
     SOURCES ${PLAYER_MASKED_PNG}
     DESTINATIONS ${DATA_DIR}/player/player.bm
@@ -310,7 +266,7 @@ add_custom_command(
 convertBitmaps(
     TARGET ${GAME_TARGET}
     INTERLEAVED
-    PALETTE ${GAME_PALETTE}
+    PALETTE ${GAME_PALETTE_SOURCE}
     SOURCES ${OUTDOOR_TILESET_COLUMN_PNG}
     DESTINATIONS ${DATA_DIR}/tileset/outdoor.bm
 )

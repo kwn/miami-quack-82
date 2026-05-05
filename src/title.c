@@ -459,9 +459,9 @@ static void titleCreate(void) {
     );
 
 #ifdef ACE_USE_AGA_FEATURES
-    paletteLoadFromPath("data/title/title.plt", (UWORD *)pristinePalette, TITLE_COLOR_COUNT);
+    paletteLoadFromPath("data/palettes/title.plt", (UWORD *)pristinePalette, TITLE_COLOR_COUNT);
 #else
-    paletteLoadFromPath("data/title/title.plt", pristinePalette, TITLE_COLOR_COUNT);
+    paletteLoadFromPath("data/palettes/title.plt", pristinePalette, TITLE_COLOR_COUNT);
 #endif
     titleBitmap = bitmapCreateFromPath("data/title/title.bm", 0);
     menuBaseBitmap = bitmapCreate(MENU_BOX_W, MENU_BOX_H, TITLE_BPP, BMF_CLEAR);

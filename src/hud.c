@@ -10,9 +10,9 @@ static tSimpleBufferManager *hudBuffer;
 
 static void loadPalette(void) {
 #ifdef ACE_USE_AGA_FEATURES
-    paletteLoadFromPath("data/game/game.plt", (UWORD *)hudVport->pPalette, GAME_COLOR_COUNT);
+    paletteLoadFromPath("data/palettes/game.plt", (UWORD *)hudVport->pPalette, GAME_COLOR_COUNT);
 #else
-    paletteLoadFromPath("data/game/game.plt", hudVport->pPalette, GAME_COLOR_COUNT);
+    paletteLoadFromPath("data/palettes/game.plt", hudVport->pPalette, GAME_COLOR_COUNT);
 #endif
 }
 

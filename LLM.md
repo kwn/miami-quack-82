@@ -16,9 +16,8 @@ ACE API unchanged: `tView`, `UWORD`, `TAG_*`, `KEY_*`, `BMF_*` etc.
 - ACE CMake options (`ACE_SCROLLBUFFER_*` etc.) must be set before `add_subdirectory("${ACE_DIR}" ace)`.
 - `ACE_DIR` is passed by `run.sh`; keep local machine paths out of `CMakeLists.txt`.
 - If `GAME_USE_AGA` is enabled, the project verifies that `ACE_DIR` looks AGA-capable and forces `ACE_USE_AGA_FEATURES=ON`.
-- AGA palettes are written with `palette_conv -aga`; ECS palettes use the default OCS output.
-- `cmake/gpl_to_ocs.cmake` replaces old `CONVERT_COLORS`/`-cc`: it generates `build/data/title/title_ocs.gpl` from the original 24-bit `title.gpl`.
-- `bitmap_conv` must keep using original `res/title/title.gpl`; only runtime ECS `.plt` uses generated `title_ocs.gpl`.
+- Palette outputs live in `build/data/palettes/*.plt`; `prepare_palette.py` leaves GPL colors unchanged for AGA and reduces them to OCS 12-bit precision for OCS before `palette_conv`.
+- Gameplay assets use `res/jehkoba32_ecs.gpl`; title and get-ready still use their own source palettes until those PNGs are repaletted.
 - `BARTMAN_GCC` is defined automatically by the toolchain file – don't add it manually.
 - `-nostdlib` is already in `CMAKE_EXE_LINKER_FLAGS` in the toolchain file – don't add it again in `CMakeLists.txt`.
 
