@@ -126,10 +126,8 @@ set(PLAYER_MASKED_PNG ${DATA_DIR}/player/player_masked.png)
 set(OUTDOOR_TILESET_COLUMN_PNG ${DATA_DIR}/tileset/outdoor_column.png)
 
 file(MAKE_DIRECTORY
-    ${DATA_DIR}/title
-    ${DATA_DIR}/get_ready
+    ${DATA_DIR}/bitmaps
     ${DATA_DIR}/palettes
-    ${DATA_DIR}/hud
     ${DATA_DIR}/player
     ${DATA_DIR}/sprites
     ${DATA_DIR}/tileset
