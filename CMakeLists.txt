@@ -178,29 +178,55 @@ function(addPaletteAsset PALETTE_SOURCE PALETTE_DESTINATION)
     target_sources(${GAME_TARGET} PUBLIC ${PALETTE_DESTINATION})
 endfunction()
 
-addPaletteAsset(${GAME_PALETTE_SOURCE} ${GAME_PALETTE})
-addPaletteAsset(${TITLE_PALETTE_SOURCE} ${TITLE_PALETTE})
-addPaletteAsset(${GET_READY_PALETTE_SOURCE} ${GET_READY_PALETTE})
+function(addBitmapAsset PALETTE_SOURCE BITMAP_SOURCE BITMAP_DESTINATION)
+    convertBitmaps(
+        TARGET ${GAME_TARGET}
+        PALETTE ${PALETTE_SOURCE}
+        SOURCES ${BITMAP_SOURCE}
+        DESTINATIONS ${BITMAP_DESTINATION}
+    )
+endfunction()
 
-convertBitmaps(
-    TARGET ${GAME_TARGET}
-    PALETTE ${TITLE_PALETTE_SOURCE}
-    SOURCES ${RES_DIR}/title/title.png
-    DESTINATIONS ${DATA_DIR}/title/title.bm
+function(addInterleavedBitmapAsset PALETTE_SOURCE BITMAP_SOURCE BITMAP_DESTINATION)
+    convertBitmaps(
+        TARGET ${GAME_TARGET}
+        INTERLEAVED
+        PALETTE ${PALETTE_SOURCE}
+        SOURCES ${BITMAP_SOURCE}
+        DESTINATIONS ${BITMAP_DESTINATION}
+    )
+endfunction()
+
+function(addMaskedInterleavedBitmapAsset PALETTE_SOURCE BITMAP_SOURCE BITMAP_DESTINATION MASK_DESTINATION)
+    convertBitmaps(
+        TARGET ${GAME_TARGET}
+        INTERLEAVED
+        PALETTE ${PALETTE_SOURCE}
+        MASK_COLOR "#FF00FF"
+        SOURCES ${BITMAP_SOURCE}
+        DESTINATIONS ${BITMAP_DESTINATION}
+        MASKS ${MASK_DESTINATION}
+    )
+endfunction()
+
+# ---- Game resources ---------------------------------------------------------
+
+addBitmapAsset(
+    ${TITLE_PALETTE_SOURCE}
+    ${RES_DIR}/title/title.png
+    ${DATA_DIR}/title/title.bm
 )
 
-convertBitmaps(
-    TARGET ${GAME_TARGET}
-    PALETTE ${GET_READY_PALETTE_SOURCE}
-    SOURCES ${RES_DIR}/get_ready/get_ready.png
-    DESTINATIONS ${DATA_DIR}/get_ready/get_ready.bm
+addBitmapAsset(
+    ${GET_READY_PALETTE_SOURCE}
+    ${RES_DIR}/get_ready/get_ready.png
+    ${DATA_DIR}/get_ready/get_ready.bm
 )
 
-convertBitmaps(
-    TARGET ${GAME_TARGET}
-    PALETTE ${GAME_PALETTE_SOURCE}
-    SOURCES ${RES_DIR}/hud/hud.png
-    DESTINATIONS ${DATA_DIR}/hud/hud.bm
+addBitmapAsset(
+    ${GAME_PALETTE_SOURCE}
+    ${RES_DIR}/hud/hud.png
+    ${DATA_DIR}/hud/hud.bm
 )
 
 add_custom_command(
@@ -217,12 +243,10 @@ add_custom_command(
         ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_sprite_png.py
 )
 
-convertBitmaps(
-    TARGET ${GAME_TARGET}
-    INTERLEAVED
-    PALETTE ${AIM_SPRITE_PALETTE}
-    SOURCES ${AIM_SPRITE_PNG}
-    DESTINATIONS ${DATA_DIR}/sprites/aim.bm
+addInterleavedBitmapAsset(
+    ${AIM_SPRITE_PALETTE}
+    ${AIM_SPRITE_PNG}
+    ${DATA_DIR}/sprites/aim.bm
 )
 
 add_custom_command(
@@ -238,14 +262,11 @@ add_custom_command(
         ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_masked_png.py
 )
 
-convertBitmaps(
-    TARGET ${GAME_TARGET}
-    INTERLEAVED
-    PALETTE ${GAME_PALETTE_SOURCE}
-    MASK_COLOR "#FF00FF"
-    SOURCES ${PLAYER_MASKED_PNG}
-    DESTINATIONS ${DATA_DIR}/player/player.bm
-    MASKS ${DATA_DIR}/player/player_mask.bm
+addMaskedInterleavedBitmapAsset(
+    ${GAME_PALETTE_SOURCE}
+    ${PLAYER_MASKED_PNG}
+    ${DATA_DIR}/player/player.bm
+    ${DATA_DIR}/player/player_mask.bm
 )
 
 add_custom_command(
@@ -263,12 +284,10 @@ add_custom_command(
         ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_tileset_column.py
 )
 
-convertBitmaps(
-    TARGET ${GAME_TARGET}
-    INTERLEAVED
-    PALETTE ${GAME_PALETTE_SOURCE}
-    SOURCES ${OUTDOOR_TILESET_COLUMN_PNG}
-    DESTINATIONS ${DATA_DIR}/tileset/outdoor.bm
+addInterleavedBitmapAsset(
+    ${GAME_PALETTE_SOURCE}
+    ${OUTDOOR_TILESET_COLUMN_PNG}
+    ${DATA_DIR}/tileset/outdoor.bm
 )
 
 getToolPath(font_conv TOOL_FONT_CONV)
@@ -286,3 +305,7 @@ add_custom_command(
         ${RES_DIR}/fonts/printable_ascii.txt
 )
 target_sources(${GAME_TARGET} PUBLIC ${DATA_DIR}/fonts/quaver.fnt)
+
+addPaletteAsset(${GAME_PALETTE_SOURCE} ${GAME_PALETTE})
+addPaletteAsset(${TITLE_PALETTE_SOURCE} ${TITLE_PALETTE})
+addPaletteAsset(${GET_READY_PALETTE_SOURCE} ${GET_READY_PALETTE})
