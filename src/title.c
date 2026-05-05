@@ -197,7 +197,7 @@ static void presentBackBuffer(void) {
 static void setPaletteLevel(UBYTE level) {
 #ifdef ACE_USE_AGA_FEATURES
     UBYTE agaLevel = ((UWORD)level * 255) / PALETTE_FULL_LEVEL;
-    paletteDimAGA(pristinePalette, (ULONG *)vport->pPalette, TITLE_COLOR_COUNT, agaLevel);
+    paletteDimAga(pristinePalette, (ULONG *)vport->pPalette, TITLE_COLOR_COUNT, agaLevel);
 #else
     paletteDim(pristinePalette, vport->pPalette, TITLE_COLOR_COUNT, level);
 #endif

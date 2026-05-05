@@ -1,43 +1,20 @@
-# Makefile – game (ACE/Amiga boilerplate)
-#
-# Usage:
-#   make          – configure (first run) then build
-#   make clean    – delete build directory
-#
+# Compatibility wrapper. Prefer using ./run.sh directly.
 
-BARTMAN_BIN   := $(HOME)/.vscode/extensions/bartmanabyss.amiga-debug-1.7.9/bin/darwin
-TOOLCHAIN_BIN := $(BARTMAN_BIN)/opt/bin
-TOOLCHAIN_PATH := $(BARTMAN_BIN)/opt
+.PHONY: all build run dist configure clean
 
-TOOLCHAIN_CMAKE := $(CURDIR)/deps/AmigaCMakeCrossToolchains/m68k-bartman.cmake
-BUILD_DIR       := build
-GAME_ELF        := $(BUILD_DIR)/game.elf
-GAME_EXE        := $(BUILD_DIR)/game.exe
+all: build
 
-export PATH := $(TOOLCHAIN_BIN):$(BARTMAN_BIN):$(PATH)
+build:
+	./run.sh build
 
-.PHONY: all clean configure
+run:
+	./run.sh run
 
-all: $(GAME_EXE)
+dist:
+	./run.sh dist
 
-$(GAME_EXE): $(BUILD_DIR)/Makefile $(wildcard src/*.c src/*.h) CMakeLists.txt
-	$(MAKE) -C $(BUILD_DIR)
-
-$(BUILD_DIR)/Makefile: CMakeLists.txt deps/AmigaCMakeCrossToolchains/m68k-bartman.cmake
-	mkdir -p $(BUILD_DIR)
-	cmake -B $(BUILD_DIR) -S . \
-		-DCMAKE_TOOLCHAIN_FILE=$(TOOLCHAIN_CMAKE) \
-		-DTOOLCHAIN_PATH=$(TOOLCHAIN_PATH) \
-		-DTOOLCHAIN_PREFIX=m68k-amiga-elf \
-		-DM68K_CPU=68000 \
-		-DCMAKE_BUILD_TYPE=Debug
-
-configure: $(BUILD_DIR)/Makefile
+configure:
+	./run.sh configure
 
 clean:
-	rm -rf $(BUILD_DIR)
-
-push:
-	git remote add origin git@github.com:kwn/miami-quack-82.git
-	git push origin main
-	git remote remove origin
+	./run.sh clean

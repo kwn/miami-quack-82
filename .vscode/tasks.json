@@ -4,14 +4,11 @@
         {
             "label": "compile",
             "type": "shell",
-            "command": "make",
+            "command": "./run.sh",
             "options": {
-                "cwd": "${workspaceRoot}",
-                "env": {
-                    "PATH": "${env:PATH}:${command:amiga.bin-path}/opt/bin:${command:amiga.bin-path}"
-                }
+                "cwd": "${workspaceRoot}"
             },
-            "args": ["-j4"],
+            "args": ["build"],
             "problemMatcher": [
                 {
                     "base": "$gcc",
@@ -34,7 +31,7 @@
         {
             "label": "clean",
             "type": "shell",
-            "command": "make",
+            "command": "./run.sh",
             "options": {
                 "cwd": "${workspaceRoot}"
             },

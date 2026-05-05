@@ -1,7 +1,7 @@
 {
     "includePath": [
         "${workspaceFolder}/src",
-        "${workspaceFolder}/deps/ace/include"
+        "${env:HOME}/Amiga/libs/ACE/include"
     ],
     "defines": ["BARTMAN_GCC"],
     "shrinkler": {

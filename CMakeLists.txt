@@ -8,16 +8,27 @@ endif()
 set(CMAKE_C_STANDARD 11)
 
 # ---- ACE options (set before add_subdirectory) ----------------------------
-file(STRINGS
-    ${CMAKE_CURRENT_LIST_DIR}/deps/ace/CMakeLists.txt
-    ACE_AGA_FEATURE_LINES
-    REGEX "ACE_USE_AGA_FEATURES"
-)
-if(ACE_AGA_FEATURE_LINES)
-    set(GAME_USE_AGA ON)
+set(ACE_DIR "" CACHE PATH "Path to ACE checkout")
+option(GAME_USE_AGA "Build with ACE AGA features" ON)
+
+if(NOT ACE_DIR)
+    message(FATAL_ERROR "ACE_DIR must be provided, for example via run.sh or -DACE_DIR=/path/to/ACE")
+endif()
+
+if(NOT EXISTS "${ACE_DIR}/CMakeLists.txt")
+    message(FATAL_ERROR "ACE_DIR does not point to an ACE checkout: ${ACE_DIR}")
+endif()
+
+if(GAME_USE_AGA)
+    file(STRINGS
+        ${ACE_DIR}/CMakeLists.txt
+        ACE_AGA_FEATURE_LINES
+        REGEX "ACE_USE_AGA_FEATURES"
+    )
+    if(NOT ACE_AGA_FEATURE_LINES)
+        message(FATAL_ERROR "GAME_USE_AGA is ON, but ACE_DIR does not look like an AGA-capable ACE checkout: ${ACE_DIR}")
+    endif()
     set(ACE_USE_AGA_FEATURES ON CACHE BOOL "" FORCE)
-else()
-    set(GAME_USE_AGA OFF)
 endif()
 
 set(ACE_SCROLLBUFFER_ENABLE_SCROLL_X ON  CACHE BOOL "" FORCE)
@@ -25,17 +36,35 @@ set(ACE_SCROLLBUFFER_ENABLE_SCROLL_Y ON  CACHE BOOL "" FORCE)
 set(ACE_BOB_WRAP_Y                   ON  CACHE BOOL "" FORCE)
 set(ACE_BOB_PRISTINE_BUFFER          ON  CACHE BOOL "" FORCE)
 
-add_subdirectory(deps/ace ace)
+add_subdirectory("${ACE_DIR}" ace)
 message(STATUS "[game] GAME_USE_AGA: '${GAME_USE_AGA}'")
+message(STATUS "[game] ACE_DIR: '${ACE_DIR}'")
 
 function(ensureAceTools)
-    set(ACE_TOOLS_DIR ${CMAKE_CURRENT_LIST_DIR}/deps/ace/tools)
-    set(ACE_TOOLS_BUILD_DIR ${ACE_TOOLS_DIR}/build)
+    set(ACE_TOOLS_DIR ${ACE_DIR}/tools)
+    set(ACE_TOOLS_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/ace-tools)
     set(ACE_REQUIRED_TOOLS palette_conv bitmap_conv font_conv)
+    find_program(HOST_C_COMPILER cc REQUIRED)
+    find_program(HOST_CXX_COMPILER c++ REQUIRED)
+
+    if(EXISTS "${ACE_TOOLS_BUILD_DIR}/CMakeCache.txt")
+        file(STRINGS
+            "${ACE_TOOLS_BUILD_DIR}/CMakeCache.txt"
+            ACE_TOOLS_CROSS_CACHE
+            REGEX "m68k-amiga-elf"
+        )
+        if(ACE_TOOLS_CROSS_CACHE)
+            file(REMOVE_RECURSE "${ACE_TOOLS_BUILD_DIR}")
+        endif()
+    endif()
 
     message(STATUS "[game] Ensuring ACE host tools")
     execute_process(
-        COMMAND ${CMAKE_COMMAND} -S ${ACE_TOOLS_DIR} -B ${ACE_TOOLS_BUILD_DIR}
+        COMMAND ${CMAKE_COMMAND}
+            -S ${ACE_TOOLS_DIR}
+            -B ${ACE_TOOLS_BUILD_DIR}
+            -DCMAKE_C_COMPILER=${HOST_C_COMPILER}
+            -DCMAKE_CXX_COMPILER=${HOST_CXX_COMPILER}
         RESULT_VARIABLE ACE_TOOLS_CONFIGURE_RESULT
     )
     if(NOT ACE_TOOLS_CONFIGURE_RESULT EQUAL 0)
@@ -57,7 +86,7 @@ ensureAceTools()
 
 # Match the original game's optimization level while keeping the selected CPU
 # from the active toolchain/CMake preset.
-set(GAME_OPT_FLAGS -Ofast)
+set(GAME_OPT_FLAGS -O2)
 target_compile_options(ace PRIVATE ${GAME_OPT_FLAGS})
 
 # ---- Game sources ----------------------------------------------------------
@@ -83,7 +112,6 @@ endif()
 
 target_include_directories(${GAME_TARGET} PRIVATE ${PROJECT_SOURCE_DIR}/src)
 target_compile_options(${GAME_TARGET} PRIVATE -Wall -Wextra -Wno-unused-parameter ${GAME_OPT_FLAGS})
-target_link_options(${GAME_TARGET} PRIVATE -Wl,--emit-relocs,--gc-sections,-Ttext=0)
 target_link_libraries(${GAME_TARGET} ace)
 
 # ---- Asset conversion -------------------------------------------------------
@@ -128,7 +156,7 @@ if(GAME_USE_AGA)
         COMMAND ${TOOL_PALETTE_CONV}
             ${RES_DIR}/title/title.gpl
             ${DATA_DIR}/title/title.plt
-            --aga
+            -aga
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         DEPENDS ${RES_DIR}/title/title.gpl
     )
@@ -150,7 +178,7 @@ if(GAME_USE_AGA)
         COMMAND ${TOOL_PALETTE_CONV}
             ${GAME_PALETTE}
             ${DATA_DIR}/game/game.plt
-            --aga
+            -aga
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         DEPENDS ${GAME_PALETTE}
     )
@@ -179,7 +207,7 @@ if(GAME_USE_AGA)
         COMMAND ${TOOL_PALETTE_CONV}
             ${RES_DIR}/get_ready/get_ready.gpl
             ${DATA_DIR}/get_ready/get_ready.plt
-            --aga
+            -aga
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         DEPENDS ${RES_DIR}/get_ready/get_ready.gpl
     )

@@ -13,10 +13,10 @@ ACE API unchanged: `tView`, `UWORD`, `TAG_*`, `KEY_*`, `BMF_*` etc.
 
 ## Non-obvious build gotchas
 - `-DTOOLCHAIN_PREFIX=m68k-amiga-elf` is required – without it CMake defaults to `m68k-generic` and can't find the compiler.
-- ACE CMake options (`ACE_SCROLLBUFFER_*` etc.) must be set **before** `add_subdirectory(deps/ace)`.
-- `CMakeLists.txt` auto-detects AGA-capable ACE by checking for `ACE_USE_AGA_FEATURES` in `deps/ace/CMakeLists.txt`.
-- If AGA is detected, the project forces `ACE_USE_AGA_FEATURES=ON` and writes `title.plt` with `palette_conv --aga`.
-- If AGA is not detected, the project writes legacy ECS `.plt` with `palette_conv --legacy` for compatibility with the old ACE palette loader.
+- ACE CMake options (`ACE_SCROLLBUFFER_*` etc.) must be set before `add_subdirectory("${ACE_DIR}" ace)`.
+- `ACE_DIR` is passed by `run.sh`; keep local machine paths out of `CMakeLists.txt`.
+- If `GAME_USE_AGA` is enabled, the project verifies that `ACE_DIR` looks AGA-capable and forces `ACE_USE_AGA_FEATURES=ON`.
+- AGA palettes are written with `palette_conv -aga`; ECS palettes use the default OCS output.
 - `cmake/gpl_to_ocs.cmake` replaces old `CONVERT_COLORS`/`-cc`: it generates `build/data/title/title_ocs.gpl` from the original 24-bit `title.gpl`.
 - `bitmap_conv` must keep using original `res/title/title.gpl`; only runtime ECS `.plt` uses generated `title_ocs.gpl`.
 - `BARTMAN_GCC` is defined automatically by the toolchain file – don't add it manually.
@@ -27,6 +27,6 @@ ACE API unchanged: `tView`, `UWORD`, `TAG_*`, `KEY_*`, `BMF_*` etc.
 - `systemUse()` must be called **first** in destroy, before freeing anything.
 - `viewDestroy(view)` recursively frees vPort, tileBuffer, scrollBuffer, and camera – don't free them manually.
 - State callbacks in `tState` can be NULL (`0`) if not needed.
-- In AGA builds, title palette storage is `ULONG[]` and fade uses `paletteDimAGA()` with 0-255 levels.
+- In AGA builds, title palette storage is `ULONG[]` and fade uses `paletteDimAga()` with 0-255 levels.
 - In ECS builds, title palette storage is `UWORD[]` and fade uses `paletteDim()` with 0-15 levels.
 - AGA title viewport tags are guarded with `#ifdef ACE_USE_AGA_FEATURES`; ECS builds must not reference AGA tags/functions.

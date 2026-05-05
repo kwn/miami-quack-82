@@ -66,5 +66,5 @@ dist/
 
 - `conf/startup-sequence` runs `Work:game.exe`.
 - `dist/` and `build/` are intentionally ignored by git.
-- The game currently targets `A1200` in `conf/game.fs-uae`, but the build is still configured for `68000` in `Makefile`.
-- ACE is built from the checked-out `deps/ace` submodule/folder.
+- The game currently targets `A1200` in `conf/game.fs-uae`; `run.sh` defaults the build to `M68K_CPU=68020`.
+- ACE is built from `ACE_DIR`, passed by `run.sh` and defaulting there to `~/Amiga/libs/ACE`.
