@@ -120,11 +120,6 @@ set(DATA_DIR ${CMAKE_CURRENT_BINARY_DIR}/data)
 set(BITMAPS_DIR ${RES_DIR}/bitmaps)
 set(PALETTES_DIR ${RES_DIR}/palettes)
 set(GAME_PALETTE_SOURCE ${RES_DIR}/palettes/game.gpl)
-set(GAME_PALETTE ${DATA_DIR}/palettes/game.plt)
-set(TITLE_PALETTE_SOURCE ${PALETTES_DIR}/title.gpl)
-set(TITLE_PALETTE ${DATA_DIR}/palettes/title.plt)
-set(GET_READY_PALETTE_SOURCE ${PALETTES_DIR}/get_ready.gpl)
-set(GET_READY_PALETTE ${DATA_DIR}/palettes/get_ready.plt)
 set(AIM_SPRITE_PNG ${DATA_DIR}/sprites/aim_hw.png)
 set(AIM_SPRITE_PALETTE ${DATA_DIR}/sprites/aim.gpl)
 set(PLAYER_MASKED_PNG ${DATA_DIR}/player/player_masked.png)
@@ -180,6 +175,17 @@ function(addPaletteAsset PALETTE_SOURCE PALETTE_DESTINATION)
         DEPENDS ${PALETTE_PREPARED_GPL}
     )
     target_sources(${GAME_TARGET} PUBLIC ${PALETTE_DESTINATION})
+endfunction()
+
+function(addPaletteResources PALETTE_SOURCE_DIR PALETTE_DESTINATION_DIR)
+    file(GLOB PALETTE_SOURCES CONFIGURE_DEPENDS ${PALETTE_SOURCE_DIR}/*.gpl)
+    foreach(PALETTE_SOURCE IN LISTS PALETTE_SOURCES)
+        get_filename_component(PALETTE_NAME ${PALETTE_SOURCE} NAME_WE)
+        addPaletteAsset(
+            ${PALETTE_SOURCE}
+            ${PALETTE_DESTINATION_DIR}/${PALETTE_NAME}.plt
+        )
+    endforeach()
 endfunction()
 
 function(addBitmapAsset PALETTE_SOURCE BITMAP_SOURCE BITMAP_DESTINATION)
@@ -311,6 +317,4 @@ add_custom_command(
 )
 target_sources(${GAME_TARGET} PUBLIC ${DATA_DIR}/fonts/quaver.fnt)
 
-addPaletteAsset(${GAME_PALETTE_SOURCE} ${GAME_PALETTE})
-addPaletteAsset(${TITLE_PALETTE_SOURCE} ${TITLE_PALETTE})
-addPaletteAsset(${GET_READY_PALETTE_SOURCE} ${GET_READY_PALETTE})
+addPaletteResources(${PALETTES_DIR} ${DATA_DIR}/palettes)
