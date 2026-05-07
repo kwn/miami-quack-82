@@ -23,6 +23,8 @@ ACE API unchanged: `tView`, `UWORD`, `TAG_*`, `KEY_*`, `BMF_*` etc.
 - ACE host tools (`palette_conv`, `bitmap_conv`, `font_conv`) are built by CMake with the host compiler, not the Bartman m68k compiler.
 - Palette outputs live in `build/data/palettes/*.plt`; `prepare_palette.py` leaves GPL colors unchanged for AGA and reduces them to OCS 12-bit precision for OCS before `palette_conv`.
 - Bitmap resources live as flat `res/bitmaps/*.png`; a bitmap uses `res/palettes/<name>.gpl` when present, otherwise it falls back to `res/palettes/game.gpl`.
+- Main playfield/title/get-ready views use `GAME_BPP` **6** (64 colors). Shared `.gpl` palettes list **64** entries so ACE `bitmap_conv` emits 6 bitplanes; unused indices can be black placeholders (`pad`).
+- ACE `viewLoad()` for AGA 6bpp sets **`bplcon2 |= KILLEHB`** (does not wipe sprite/playfield priority bits). Use an ACE checkout that includes this fix in `extview.c`.
 - `BARTMAN_GCC` is defined automatically by the toolchain file – don't add it manually.
 - `-nostdlib` is already in `CMAKE_EXE_LINKER_FLAGS` in the toolchain file – don't add it again in `CMakeLists.txt`.
 

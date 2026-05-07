@@ -2,6 +2,7 @@
 
 #include "campaign.h"
 #include "font.h"
+#include "game.h"
 #include "map_generator.h"
 
 #include <ace/managers/blit.h>
@@ -17,8 +18,7 @@
 
 extern tStateManager *stateMgr;
 
-#define GET_READY_BPP 5
-#define GET_READY_COLOR_COUNT (1 << GET_READY_BPP)
+#define GET_READY_COLOR_COUNT GAME_COLOR_COUNT
 #define SCREEN_W 320
 #define SCREEN_H 256
 #define GET_READY_FULL_LEVEL 15
@@ -87,7 +87,7 @@ static void getReadyCreate(void) {
 
     vport = vPortCreate(0,
         TAG_VPORT_VIEW, view,
-        TAG_VPORT_BPP, GET_READY_BPP,
+        TAG_VPORT_BPP, GAME_BPP,
         TAG_VPORT_WIDTH, SCREEN_W,
         TAG_VPORT_HEIGHT, SCREEN_H,
 #ifdef ACE_USE_AGA_FEATURES

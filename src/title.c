@@ -2,6 +2,7 @@
 
 #include "campaign.h"
 #include "font.h"
+#include "game.h"
 
 #include <ace/managers/blit.h>
 #include <ace/managers/game.h>
@@ -19,8 +20,7 @@
 
 extern tStateManager *stateMgr;
 
-#define TITLE_BPP 5
-#define TITLE_COLOR_COUNT (1 << TITLE_BPP)
+#define TITLE_COLOR_COUNT GAME_COLOR_COUNT
 #define SCREEN_W 320
 #define SCREEN_H 256
 
@@ -441,7 +441,7 @@ static void titleCreate(void) {
 
     vport = vPortCreate(0,
         TAG_VPORT_VIEW, view,
-        TAG_VPORT_BPP, TITLE_BPP,
+        TAG_VPORT_BPP, GAME_BPP,
         TAG_VPORT_WIDTH, SCREEN_W,
         TAG_VPORT_HEIGHT, SCREEN_H,
 #ifdef ACE_USE_AGA_FEATURES
@@ -464,8 +464,8 @@ static void titleCreate(void) {
     paletteLoadFromPath("data/palettes/title.plt", pristinePalette, TITLE_COLOR_COUNT);
 #endif
     titleBitmap = bitmapCreateFromPath("data/bitmaps/title.bm", 0);
-    menuBaseBitmap = bitmapCreate(MENU_BOX_W, MENU_BOX_H, TITLE_BPP, BMF_CLEAR);
-    menuDrawBitmap = bitmapCreate(MENU_BOX_W, MENU_BOX_H, TITLE_BPP, BMF_CLEAR);
+    menuBaseBitmap = bitmapCreate(MENU_BOX_W, MENU_BOX_H, GAME_BPP, BMF_CLEAR);
+    menuDrawBitmap = bitmapCreate(MENU_BOX_W, MENU_BOX_H, GAME_BPP, BMF_CLEAR);
     buildMenuBaseBitmap();
     font = fontCreateFromPath("data/fonts/quaver.fnt");
     textBitmap = fontCreateTextBitMap(160, 16);

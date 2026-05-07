@@ -5,7 +5,7 @@
 
 #define GAME_SCREEN_W 320
 #define GAME_SCREEN_H 256
-#define GAME_BPP 5
+#define GAME_BPP 6
 #define GAME_COLOR_COUNT (1 << GAME_BPP)
 #define GAME_AGA_FMODE 0
 #define HUD_H 16
