@@ -8,10 +8,12 @@ typedef struct {
 
 static const int idleFrameOffsets[] = {9, 12};
 static const int walkFrameOffsets[] = {0, 3, 6, 3};
+static const int dodgeFrameOffsets[] = {0, 6};
 
 static const AnimationDef animations[] = {
     [PLAYER_ANIM_IDLE] = {idleFrameOffsets, 2, 25},
     [PLAYER_ANIM_WALK] = {walkFrameOffsets, 4, 4},
+    [PLAYER_ANIM_DODGE] = {dodgeFrameOffsets, 4, 2},
 };
 
 static PlayerAnimState currentState;
@@ -24,8 +26,16 @@ void playerAnimCreate(void) {
     currentFrame = 0;
 }
 
-void playerAnimProcess(int inputDx, int inputDy) {
-    PlayerAnimState newState = (inputDx || inputDy) ? PLAYER_ANIM_WALK : PLAYER_ANIM_IDLE;
+void playerAnimProcess(int inputDx, int inputDy, int isDodging) {
+    PlayerAnimState newState;
+
+    if (isDodging) {
+        newState = PLAYER_ANIM_DODGE;
+    } else if (inputDx || inputDy) {
+        newState = PLAYER_ANIM_WALK;
+    } else {
+        newState = PLAYER_ANIM_IDLE;
+    }
 
     if (newState != currentState) {
         currentState = newState;

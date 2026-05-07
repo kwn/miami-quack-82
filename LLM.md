@@ -28,6 +28,10 @@ ACE API unchanged: `tView`, `UWORD`, `TAG_*`, `KEY_*`, `BMF_*` etc.
 - `BARTMAN_GCC` is defined automatically by the toolchain file – don't add it manually.
 - `-nostdlib` is already in `CMAKE_EXE_LINKER_FLAGS` in the toolchain file – don't add it again in `CMakeLists.txt`.
 
+## Player dodge
+- **Space** triggers a dodge roll (same timing/curve as original `game/`). Direction follows movement input; if idle, toward the aim cursor (from player center). Cooldown and wall-cancel match `player_dodge.c` semantics; movement uses world-edge clamp only until tile collision exists.
+- **`playerIsInDodge()`** is exposed for future weapons/combat. In-game **Return** ends the level (Space no longer does).
+
 ## Non-obvious ACE gotchas
 - `systemUnuse()` must be called **after** all allocations (bitmaps, buffers, views).
 - `systemUse()` must be called **first** in destroy, before freeing anything.

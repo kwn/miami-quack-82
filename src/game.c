@@ -50,7 +50,7 @@ static void gameLoop(void) {
         return;
     }
 
-    if (keyUse(KEY_RETURN) || keyUse(KEY_SPACE)) {
+    if (keyUse(KEY_RETURN)) {
         campaignSetLevelResult(LEVEL_RESULT_COMPLETED);
         stateChange(stateMgr, &campaignState);
         return;
