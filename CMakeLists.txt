@@ -86,7 +86,7 @@ ensureAceTools()
 
 # Match the original game's optimization level while keeping the selected CPU
 # from the active toolchain/CMake preset.
-set(GAME_OPT_FLAGS -O2)
+set(GAME_OPT_FLAGS -O2 -fno-optimize-sibling-calls)
 target_compile_options(ace PRIVATE ${GAME_OPT_FLAGS})
 
 # ---- Game sources ----------------------------------------------------------
