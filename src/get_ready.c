@@ -44,7 +44,7 @@ static void setPaletteLevel(UBYTE level) {
     UBYTE agaLevel = ((UWORD)level * 255) / GET_READY_FULL_LEVEL;
     paletteDimAga(pristinePalette, (ULONG *)vport->pPalette, GET_READY_COLOR_COUNT, agaLevel);
 #else
-    paletteDim(pristinePalette, vport->pPalette, GET_READY_COLOR_COUNT, level);
+    paletteDimOcs(pristinePalette, vport->pPalette, GET_READY_COLOR_COUNT, level);
 #endif
     viewUpdateGlobalPalette(view);
 }

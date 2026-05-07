@@ -16,7 +16,7 @@ TOOLCHAIN_PATH="${TOOLCHAIN_PATH:-$BARTMAN_DIR/opt}"
 TOOLCHAIN_FILE="${TOOLCHAIN_FILE:-$TOOLCHAINS_DIR/m68k-bartman.cmake}"
 TOOLCHAIN_PREFIX="${TOOLCHAIN_PREFIX:-m68k-amiga-elf}"
 
-M68K_CPU="${M68K_CPU:-68020}"
+M68K_CPU="${M68K_CPU:-68000}"
 BUILD_TYPE="${BUILD_TYPE:-Debug}"
 GAME_USE_AGA="${GAME_USE_AGA:-ON}"
 BUILD_JOBS="${BUILD_JOBS:-4}"
@@ -45,12 +45,16 @@ configure() {
     if [ -f "$BUILD_DIR/CMakeCache.txt" ]; then
         cached_ace_dir="$(sed -n 's/^ACE_DIR:PATH=//p' "$BUILD_DIR/CMakeCache.txt" || true)"
         cached_cpm_dir="$(sed -n 's/^CPM_DIRECTORY:INTERNAL=//p' "$BUILD_DIR/CMakeCache.txt" || true)"
+        cached_game_use_aga="$(sed -n 's/^GAME_USE_AGA:BOOL=//p' "$BUILD_DIR/CMakeCache.txt" || true)"
 
         if [ -n "$cached_ace_dir" ] && [ "$cached_ace_dir" != "$ACE_DIR" ]; then
             echo "--- Removing stale build cache for previous ACE_DIR ---"
             rm -rf "$BUILD_DIR"
         elif [ -n "$cached_cpm_dir" ] && [ "$cached_cpm_dir" != "$ACE_DIR/cmake" ]; then
             echo "--- Removing stale build cache for previous ACE CPM directory ---"
+            rm -rf "$BUILD_DIR"
+        elif [ -n "$cached_game_use_aga" ] && [ "$cached_game_use_aga" != "$GAME_USE_AGA" ]; then
+            echo "--- Removing stale build cache for previous GAME_USE_AGA ---"
             rm -rf "$BUILD_DIR"
         fi
     fi
