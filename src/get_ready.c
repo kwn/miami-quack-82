@@ -92,7 +92,7 @@ static void getReadyCreate(void) {
         TAG_VPORT_HEIGHT, SCREEN_H,
 #ifdef ACE_USE_AGA_FEATURES
         TAG_VPORT_USES_AGA, 1,
-        TAG_VPORT_FMODE, 0,
+        TAG_VPORT_FMODE, 3,
 #endif
         TAG_DONE
     );

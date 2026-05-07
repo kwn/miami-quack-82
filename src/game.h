@@ -7,7 +7,7 @@
 #define GAME_SCREEN_H 256
 #define GAME_BPP 6
 #define GAME_COLOR_COUNT (1 << GAME_BPP)
-#define GAME_AGA_FMODE 0
+#define GAME_AGA_FMODE 1
 #define HUD_H 16
 #define GAME_VIEW_H (GAME_SCREEN_H - HUD_H)
 
