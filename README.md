@@ -31,7 +31,7 @@ AMIGA_LIBS=~/Amiga/libs
 ACE_DIR=$AMIGA_LIBS/ACE
 TOOLCHAINS_DIR=$AMIGA_LIBS/AmigaCMakeCrossToolchains
 BARTMAN_VERSION=1.7.9
-M68K_CPU=68000
+M68K_CPU=68020
 BUILD_TYPE=Debug
 GAME_USE_AGA=ON
 BUILD_JOBS=4
@@ -121,6 +121,6 @@ The debugger expects `build/game` in configuration; the extension appends the fi
 - `conf/startup-sequence` runs `Work:game.exe`.
 - `dist/` and `build/` are intentionally ignored by git.
 - `conf/game.fs-uae` currently targets `A1200` for quick `./run.sh run` testing.
-- `run.sh` currently defaults to `M68K_CPU=68000` and `GAME_USE_AGA=ON`.
+- `run.sh` defaults to `M68K_CPU=68020` (A1200-class) and `GAME_USE_AGA=ON`.
 - If your ACE checkout does not expose `ACE_USE_AGA_FEATURES`, build with `GAME_USE_AGA=OFF`.
-- For 020 experiments, use `M68K_CPU=68020` and rebuild from a clean `build/`.
+- Changing `M68K_CPU` does not auto-invalidate the CMake cache; use `./run.sh clean` before rebuilding when switching CPU (e.g. to `68000` for A500-style builds).

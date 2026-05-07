@@ -14,7 +14,7 @@ ACE API unchanged: `tView`, `UWORD`, `TAG_*`, `KEY_*`, `BMF_*` etc.
 ## Non-obvious build gotchas
 - `run.sh` is the main build entry point; `Makefile` is only a compatibility wrapper.
 - ACE and AmigaCMakeCrossToolchains live outside this repo by default: `~/Amiga/libs/ACE` and `~/Amiga/libs/AmigaCMakeCrossToolchains`.
-- `run.sh` defaults to `M68K_CPU=68000`, `GAME_USE_AGA=ON`, `BUILD_TYPE=Debug`, and Bartman 1.7.9.
+- `run.sh` defaults to `M68K_CPU=68020`, `GAME_USE_AGA=ON`, `BUILD_TYPE=Debug`, and Bartman 1.7.9.
 - `-DTOOLCHAIN_PREFIX=m68k-amiga-elf` is required – without it CMake defaults to `m68k-generic` and can't find the compiler.
 - ACE CMake options (`ACE_SCROLLBUFFER_*` etc.) must be set before `add_subdirectory("${ACE_DIR}" ace)`.
 - `ACE_DIR` is passed by `run.sh`; keep local machine paths out of `CMakeLists.txt`.
