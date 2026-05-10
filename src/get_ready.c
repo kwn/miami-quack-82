@@ -112,15 +112,20 @@ static void getReadyCreate(void) {
     setPaletteLevel(GET_READY_BLACK_LEVEL);
     viewLoad(view);
     fadePaletteLevel(GET_READY_BLACK_LEVEL, GET_READY_FULL_LEVEL);
-    systemUnuse();
     mapGeneratorSetSeed(0x19820827);
     mapGeneratorGenerateOutdoor();
+    gamePrepare();
+    frameCounter = GET_READY_AUTO_ADVANCE_FRAMES;
+    systemUnuse();
 }
 
 static void getReadyLoop(void) {
     ++frameCounter;
 
     if (keyUse(KEY_ESCAPE)) {
+        systemUse();
+        gameDiscardPrepared();
+        systemUnuse();
         fadePaletteLevel(GET_READY_FULL_LEVEL, GET_READY_BLACK_LEVEL);
         campaignSetRoute(CAMPAIGN_ROUTE_TITLE);
         stateChange(stateMgr, &campaignState);

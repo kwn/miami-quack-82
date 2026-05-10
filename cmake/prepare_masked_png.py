@@ -85,12 +85,30 @@ def unfilter_rows(raw, width, height):
     return rows
 
 
+def read_gpl_palette(path):
+    colors = []
+    with open(path, "r", encoding="utf-8") as handle:
+        for line in handle:
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            parts = stripped.split()
+            if len(parts) < 3:
+                continue
+            try:
+                colors.append(bytes((int(parts[0]), int(parts[1]), int(parts[2]))))
+            except ValueError:
+                continue
+    return colors
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--width", type=int, required=True)
     parser.add_argument("--height", type=int, required=True)
+    parser.add_argument("--game-palette")
     args = parser.parse_args()
 
     chunks = read_chunks(args.input)
@@ -113,17 +131,24 @@ def main():
 
     raw = zlib.decompress(b"".join(data for chunk_type, data in chunks if chunk_type == b"IDAT"))
     rows = unfilter_rows(raw, width, height)
+    game_palette = read_gpl_palette(args.game_palette) if args.game_palette else None
 
     out_raw = bytearray()
     for row in rows:
         out_raw.append(0)
         for color_idx in row:
             alpha = transparency[color_idx] if color_idx < len(transparency) else 255
-            if alpha == 0:
+            palette_offset = color_idx * 3
+            source_rgb = palette[palette_offset:palette_offset + 3]
+            if alpha == 0 or source_rgb == MASK_RGB:
                 out_raw.extend(MASK_RGB)
             else:
-                palette_offset = color_idx * 3
-                out_raw.extend(palette[palette_offset:palette_offset + 3])
+                if game_palette:
+                    if color_idx >= len(game_palette):
+                        raise ValueError(f"Color index {color_idx} missing from {args.game_palette}")
+                    out_raw.extend(game_palette[color_idx])
+                else:
+                    out_raw.extend(source_rgb)
 
     os.makedirs(os.path.dirname(args.output), exist_ok=True)
     with open(args.output, "wb") as handle:

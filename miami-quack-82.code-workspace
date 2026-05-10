@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "../game"
+		},
+		{
+			"path": "../../libs/ACE"
 		}
 	],
 	"settings": {

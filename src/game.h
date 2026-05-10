@@ -13,4 +13,7 @@
 
 extern tState gameState;
 
+void gamePrepare(void);
+void gameDiscardPrepared(void);
+
 #endif /* GAME_H */

@@ -175,8 +175,6 @@ void playerCreate(void) {
         playerX,
         playerY
     );
-    bobReallocateBuffers();
-    bobDiscardUndraw();
 }
 
 void playerProcess(void) {

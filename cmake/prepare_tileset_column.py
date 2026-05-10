@@ -83,6 +83,23 @@ def unfilter_rows(raw, width, height):
     return rows
 
 
+def read_gpl_palette(path):
+    palette = bytearray()
+    with open(path, "r", encoding="utf-8") as handle:
+        for line in handle:
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            parts = stripped.split()
+            if len(parts) < 3:
+                continue
+            try:
+                palette.extend((int(parts[0]), int(parts[1]), int(parts[2])))
+            except ValueError:
+                continue
+    return bytes(palette)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", required=True)
@@ -91,6 +108,7 @@ def main():
     parser.add_argument("--tile-height", type=int, required=True)
     parser.add_argument("--columns", type=int, required=True)
     parser.add_argument("--rows", type=int, required=True)
+    parser.add_argument("--game-palette")
     args = parser.parse_args()
 
     chunks = read_chunks(args.input)
@@ -112,6 +130,7 @@ def main():
     raw = zlib.decompress(b"".join(data for chunk_type, data in chunks if chunk_type == b"IDAT"))
     source_rows = unfilter_rows(raw, width, height)
     output_rows = []
+    game_palette = read_gpl_palette(args.game_palette) if args.game_palette else None
 
     for tile_y in range(args.rows):
         for tile_x in range(args.columns):
@@ -133,7 +152,10 @@ def main():
         for chunk_type, chunk_data in chunks:
             if chunk_type in (b"IHDR", b"IDAT", b"IEND"):
                 continue
-            write_chunk(handle, chunk_type, chunk_data)
+            if chunk_type == b"PLTE" and game_palette:
+                write_chunk(handle, b"PLTE", game_palette)
+            else:
+                write_chunk(handle, chunk_type, chunk_data)
         write_chunk(handle, b"IDAT", zlib.compress(bytes(out_raw)))
         write_chunk(handle, b"IEND", b"")
 

@@ -6,6 +6,7 @@
 #include "hud.h"
 #include "player.h"
 #include "scroller.h"
+#include "weapon.h"
 
 #include <ace/managers/bob.h>
 #include <ace/managers/key.h>
@@ -17,8 +18,13 @@ extern tStateManager *stateMgr;
 
 static tView *view;
 static tVPort *gameVport;
+static UBYTE isPrepared;
 
-static void gameCreate(void) {
+void gamePrepare(void) {
+    if (isPrepared) {
+        return;
+    }
+
     view = viewCreate(0,
         TAG_VIEW_GLOBAL_PALETTE, 1,
         TAG_VIEW_GLOBAL_BPP, 1,
@@ -32,13 +38,19 @@ static void gameCreate(void) {
     gameVport = scrollerCreate(view);
     aimCreate(view);
     playerCreate();
+    weaponCreate();
+    bobReallocateBuffers();
     gameCameraCreate();
     gameCameraSetFocus(playerGetX(), playerGetY());
     gameCameraTrackPlayer(playerGetX(), playerGetY(), playerHasMovementInput());
     gameCameraSnapToFocus();
     scrollerRedrawAll();
     bobDiscardUndraw();
+    isPrepared = 1;
+}
 
+static void gameCreate(void) {
+    gamePrepare();
     viewLoad(view);
     systemUnuse();
 }
@@ -58,11 +70,13 @@ static void gameLoop(void) {
 
     aimProcess();
     playerProcess();
+    weaponProcess(playerGetX(), playerGetY(), aimGetX(), aimGetY());
     gameCameraTrackPlayer(playerGetX(), playerGetY(), playerHasMovementInput());
     gameCameraProcess();
 
     bobBegin(scrollerGetBackBuffer());
     playerRender();
+    weaponRender();
     bobEnd();
 
     viewProcessManagers(view);
@@ -70,10 +84,13 @@ static void gameLoop(void) {
     vPortWaitForEnd(gameVport);
 }
 
-static void gameDestroy(void) {
-    systemUse();
-    viewLoad(0);
+void gameDiscardPrepared(void) {
+    if (!isPrepared) {
+        return;
+    }
+
     gameCameraDestroy();
+    weaponDestroy();
     playerDestroy();
     aimDestroy();
     viewDestroy(view);
@@ -81,6 +98,13 @@ static void gameDestroy(void) {
     hudDestroy();
     view = 0;
     gameVport = 0;
+    isPrepared = 0;
+}
+
+static void gameDestroy(void) {
+    systemUse();
+    viewLoad(0);
+    gameDiscardPrepared();
 }
 
 tState gameState = {

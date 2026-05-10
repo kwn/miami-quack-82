@@ -33,4 +33,50 @@ static inline int mathDirection3FromVector(int dx, int dy) {
     return dx >= 0 ? DIR3_RIGHT : DIR3_LEFT;
 }
 
+/** 18 directions clockwise from up, matching the original weapon frame layout. */
+static inline int mathDirection18FromVector(int dx, int dy) {
+    int absDx = dx >= 0 ? dx : -dx;
+    int absDy = dy >= 0 ? dy : -dy;
+
+    if (absDx == 0 && absDy == 0) {
+        return 0;
+    }
+
+    if (absDy >= absDx) {
+        if (dy < 0) {
+            if (absDx * 5 <= absDy) {
+                return dx >= 0 ? 0 : 16;
+            }
+            if (dx > 0) {
+                return absDx * 3 <= absDy * 2 ? 1 : 2;
+            }
+            return absDx * 3 <= absDy * 2 ? 15 : 14;
+        }
+
+        if (absDx * 5 <= absDy) {
+            return dx >= 0 ? 8 : 17;
+        }
+        if (dx > 0) {
+            return absDx * 3 <= absDy * 2 ? 7 : 6;
+        }
+        return absDx * 3 <= absDy * 2 ? 9 : 10;
+    }
+
+    if (dx > 0) {
+        if (absDy * 5 <= absDx) {
+            return 4;
+        }
+        return dy < 0
+            ? (absDy * 3 <= absDx * 2 ? 3 : 2)
+            : (absDy * 3 <= absDx * 2 ? 5 : 6);
+    }
+
+    if (absDy * 5 <= absDx) {
+        return 12;
+    }
+    return dy < 0
+        ? (absDy * 3 <= absDx * 2 ? 13 : 14)
+        : (absDy * 3 <= absDx * 2 ? 11 : 10);
+}
+
 #endif /* GAME_MATH_UTILS_H */
