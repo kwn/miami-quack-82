@@ -125,9 +125,11 @@ set(AIM_SPRITE_PALETTE ${DATA_DIR}/sprites/aim.gpl)
 set(PLAYER_MASKED_PNG ${DATA_DIR}/player/player_masked.png)
 set(OUTDOOR_TILESET_COLUMN_PNG ${DATA_DIR}/tileset/outdoor_column.png)
 set(WEAPON_NAMES knife gun shotgun sniper uzi m16 flamethrower minigun)
+set(BULLET_NAMES small flame)
 
 file(MAKE_DIRECTORY
     ${DATA_DIR}/bitmaps
+    ${DATA_DIR}/bullets
     ${DATA_DIR}/palettes
     ${DATA_DIR}/player
     ${DATA_DIR}/sprites
@@ -295,6 +297,36 @@ addMaskedInterleavedBitmapAsset(
     ${DATA_DIR}/player/player.bm
     ${DATA_DIR}/player/player_mask.bm
 )
+
+
+foreach(BULLET_NAME IN LISTS BULLET_NAMES)
+    set(BULLET_SOURCE_PNG ${RES_DIR}/bullets/bullet_${BULLET_NAME}.png)
+    set(BULLET_MASKED_PNG ${DATA_DIR}/bullets/bullet_${BULLET_NAME}_masked.png)
+    if(EXISTS "${BULLET_SOURCE_PNG}")
+        add_custom_command(
+            OUTPUT ${BULLET_MASKED_PNG}
+            COMMAND ${PYTHON3_EXECUTABLE}
+                ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_masked_png.py
+                --input ${BULLET_SOURCE_PNG}
+                --output ${BULLET_MASKED_PNG}
+                --width 16
+                --height 16
+                --game-palette ${GAME_PALETTE_SOURCE}
+                --transparent-index 0
+            DEPENDS
+                ${BULLET_SOURCE_PNG}
+                ${GAME_PALETTE_SOURCE}
+                ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_masked_png.py
+        )
+
+        addMaskedInterleavedBitmapAsset(
+            ${GAME_PALETTE_SOURCE}
+            ${BULLET_MASKED_PNG}
+            ${DATA_DIR}/bullets/bullet_${BULLET_NAME}.bm
+            ${DATA_DIR}/bullets/bullet_${BULLET_NAME}_mask.bm
+        )
+    endif()
+endforeach()
 
 foreach(WEAPON_NAME IN LISTS WEAPON_NAMES)
     set(WEAPON_SOURCE_PNG ${RES_DIR}/weapons/weapon_${WEAPON_NAME}.png)

@@ -109,6 +109,7 @@ def main():
     parser.add_argument("--width", type=int, required=True)
     parser.add_argument("--height", type=int, required=True)
     parser.add_argument("--game-palette")
+    parser.add_argument("--transparent-index", type=int)
     args = parser.parse_args()
 
     chunks = read_chunks(args.input)
@@ -140,7 +141,7 @@ def main():
             alpha = transparency[color_idx] if color_idx < len(transparency) else 255
             palette_offset = color_idx * 3
             source_rgb = palette[palette_offset:palette_offset + 3]
-            if alpha == 0 or source_rgb == MASK_RGB:
+            if alpha == 0 or source_rgb == MASK_RGB or color_idx == args.transparent_index:
                 out_raw.extend(MASK_RGB)
             else:
                 if game_palette:

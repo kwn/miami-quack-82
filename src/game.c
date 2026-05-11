@@ -1,6 +1,7 @@
 #include "game.h"
 
 #include "aim.h"
+#include "bullet.h"
 #include "campaign.h"
 #include "game_camera.h"
 #include "hud.h"
@@ -39,6 +40,7 @@ void gamePrepare(void) {
     aimCreate(view);
     playerCreate();
     weaponCreate();
+    bulletCreate();
     bobReallocateBuffers();
     gameCameraCreate();
     gameCameraSetFocus(playerGetX(), playerGetY());
@@ -71,12 +73,14 @@ static void gameLoop(void) {
     aimProcess();
     playerProcess();
     weaponProcess(playerGetX(), playerGetY(), aimGetX(), aimGetY());
+    bulletProcess();
     gameCameraTrackPlayer(playerGetX(), playerGetY(), playerHasMovementInput());
     gameCameraProcess();
 
     bobBegin(scrollerGetBackBuffer());
     playerRender();
     weaponRender();
+    bulletRender();
     bobEnd();
 
     viewProcessManagers(view);
@@ -90,6 +94,7 @@ void gameDiscardPrepared(void) {
     }
 
     gameCameraDestroy();
+    bulletDestroy();
     weaponDestroy();
     playerDestroy();
     aimDestroy();

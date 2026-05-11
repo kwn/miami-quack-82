@@ -1,11 +1,13 @@
 #include "weapon.h"
 
+#include "bullet.h"
 #include "game.h"
 #include "math_utils.h"
 #include "scroller.h"
 
 #include <ace/managers/bob.h>
 #include <ace/managers/key.h>
+#include <ace/managers/mouse.h>
 #include <ace/utils/bitmap.h>
 
 #define WEAPON_FRAME_COUNT 9
@@ -15,6 +17,13 @@
 #define WEAPON_ORBIT_RADIUS 18
 #define PLAYER_HALF_W 8
 #define PLAYER_HALF_H 8
+#define WEAPON_SHOOT_COOLDOWN_FRAMES 10
+#define WEAPON_BULLET_SPEED 16
+#define WEAPON_BULLET_MAX_DISTANCE 180
+#define WEAPON_FLAME_SPEED 8
+#define WEAPON_FLAME_MAX_DISTANCE 90
+#define WEAPON_FLAMETHROWER_TYPE 6
+#define WEAPON_MOUSE_PORT MOUSE_PORT_1
 
 typedef struct tWeaponGfx {
 	tBitMap *pRight;
@@ -61,6 +70,7 @@ static WORD s_wWeaponOffsetX;
 static WORD s_wWeaponOffsetY;
 static UWORD s_uwWeaponX;
 static UWORD s_uwWeaponY;
+static UBYTE s_ubShootCooldown;
 
 static UBYTE reverseByte(UBYTE ubValue) {
 	ubValue = ((ubValue & 0xF0) >> 4) | ((ubValue & 0x0F) << 4);
@@ -132,6 +142,30 @@ static void destroyWeaponGfx(tWeaponGfx *pGfx) {
 	*pGfx = (tWeaponGfx){0};
 }
 
+static void spawnBullet(WORD wDx, WORD wDy) {
+	if(s_ubShootCooldown) {
+		return;
+	}
+
+	tBulletType eType = s_ubCurrentWeapon == WEAPON_FLAMETHROWER_TYPE ? BULLET_TYPE_FLAME : BULLET_TYPE_SMALL;
+	UWORD uwSpeed = eType == BULLET_TYPE_FLAME ? WEAPON_FLAME_SPEED : WEAPON_BULLET_SPEED;
+	UWORD uwMaxDistance = eType == BULLET_TYPE_FLAME ? WEAPON_FLAME_MAX_DISTANCE : WEAPON_BULLET_MAX_DISTANCE;
+	WORD wStartX = (WORD)s_uwWeaponX;
+	WORD wStartY = (WORD)s_uwWeaponY;
+
+	bulletSpawn(
+		BULLET_OWNER_PLAYER,
+		eType,
+		wStartX,
+		wStartY,
+		wDx,
+		wDy,
+		uwSpeed,
+		uwMaxDistance
+	);
+	s_ubShootCooldown = WEAPON_SHOOT_COOLDOWN_FRAMES;
+}
+
 static UBYTE findFirstLoadedWeapon(void) {
 	for(UBYTE ubWeapon = 0; ubWeapon < WEAPON_TYPE_COUNT; ++ubWeapon) {
 		if(s_pWeaponGfx[ubWeapon].isLoaded) {
@@ -176,6 +210,7 @@ void weaponCreate(void) {
 	getWeaponFrame(s_ubCurrentWeapon, 0, &pFrame, &pMask);
 	bobInit(&s_sWeaponBob, WEAPON_FRAME_W, WEAPON_FRAME_H, 1, pFrame, pMask, 0, 0);
 	s_isBobReady = 1;
+	s_ubShootCooldown = 0;
 }
 
 void weaponProcess(UWORD uwPlayerX, UWORD uwPlayerY, UWORD uwAimX, UWORD uwAimY) {
@@ -212,6 +247,13 @@ void weaponProcess(UWORD uwPlayerX, UWORD uwPlayerY, UWORD uwAimX, UWORD uwAimY)
 	LONG lWeaponY = (LONG)uwPlayerY + s_wWeaponOffsetY;
 	s_uwWeaponX = lWeaponX < 0 ? 0 : (UWORD)lWeaponX;
 	s_uwWeaponY = lWeaponY < 0 ? 0 : (UWORD)lWeaponY;
+
+	if(s_ubShootCooldown) {
+		--s_ubShootCooldown;
+	}
+	if(mouseCheck(WEAPON_MOUSE_PORT, MOUSE_LMB)) {
+		spawnBullet(wDx, wDy);
+	}
 }
 
 void weaponRender(void) {
