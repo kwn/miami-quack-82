@@ -32,6 +32,7 @@ static tBitMap *image;
 static tFont *font;
 static tTextBitMap *textBitmap;
 static UWORD frameCounter;
+static UBYTE isFadedOut;
 
 #ifdef ACE_USE_AGA_FEATURES
 static ULONG pristinePalette[GET_READY_COLOR_COUNT];
@@ -109,11 +110,14 @@ static void getReadyCreate(void) {
     loadGetReadyImage();
 
     frameCounter = 0;
+    isFadedOut = 0;
     setPaletteLevel(GET_READY_BLACK_LEVEL);
     viewLoad(view);
     fadePaletteLevel(GET_READY_BLACK_LEVEL, GET_READY_FULL_LEVEL);
     mapGeneratorSetSeed(0x19820827);
     mapGeneratorGenerateOutdoor();
+    fadePaletteLevel(GET_READY_FULL_LEVEL, GET_READY_BLACK_LEVEL);
+    isFadedOut = 1;
     gamePrepare();
     frameCounter = GET_READY_AUTO_ADVANCE_FRAMES;
     systemUnuse();
@@ -126,7 +130,10 @@ static void getReadyLoop(void) {
         systemUse();
         gameDiscardPrepared();
         systemUnuse();
-        fadePaletteLevel(GET_READY_FULL_LEVEL, GET_READY_BLACK_LEVEL);
+        if (!isFadedOut) {
+            fadePaletteLevel(GET_READY_FULL_LEVEL, GET_READY_BLACK_LEVEL);
+            isFadedOut = 1;
+        }
         campaignSetRoute(CAMPAIGN_ROUTE_TITLE);
         stateChange(stateMgr, &campaignState);
         return;
@@ -138,7 +145,10 @@ static void getReadyLoop(void) {
         keyUse(KEY_SPACE) ||
         joyUse(JOY1_FIRE)
     ) {
-        fadePaletteLevel(GET_READY_FULL_LEVEL, GET_READY_BLACK_LEVEL);
+        if (!isFadedOut) {
+            fadePaletteLevel(GET_READY_FULL_LEVEL, GET_READY_BLACK_LEVEL);
+            isFadedOut = 1;
+        }
         campaignSetRoute(CAMPAIGN_ROUTE_GAMEPLAY);
         stateChange(stateMgr, &campaignState);
         return;
@@ -172,6 +182,7 @@ static void getReadyDestroy(void) {
 
     buffer = 0;
     vport = 0;
+    isFadedOut = 0;
 }
 
 tState getReadyState = {
