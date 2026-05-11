@@ -17,13 +17,9 @@
 #define WEAPON_ORBIT_RADIUS 18
 #define PLAYER_HALF_W 8
 #define PLAYER_HALF_H 8
-#define WEAPON_SHOOT_COOLDOWN_FRAMES 10
-#define WEAPON_BULLET_SPEED 16
-#define WEAPON_BULLET_MAX_DISTANCE 180
-#define WEAPON_FLAME_SPEED 8
-#define WEAPON_FLAME_MAX_DISTANCE 90
 #define WEAPON_FLAMETHROWER_TYPE 6
 #define WEAPON_MOUSE_PORT MOUSE_PORT_1
+#define WEAPON_SWITCH_COOLDOWN_FRAMES 10
 
 typedef struct tWeaponGfx {
 	tBitMap *pRight;
@@ -36,6 +32,34 @@ typedef struct tWeaponGfx {
 	UBYTE *pLeftMasks[WEAPON_FRAME_COUNT];
 	UBYTE isLoaded;
 } tWeaponGfx;
+
+typedef struct tWeaponStats {
+	UWORD uwCooldownFrames;
+	UWORD uwBulletSpeed;
+	UWORD uwBulletMaxDistance;
+	UWORD uwDamage;
+	UWORD uwKnockback;
+	UWORD uwDeathKnockback;
+	WORD wClipSize;
+	WORD wMaxTotalAmmo;
+	UWORD uwReloadFrames;
+	UWORD uwNoiseRadius;
+	UBYTE ubBulletCount;
+	UBYTE ubSpread;
+} tWeaponStats;
+
+// cooldown, speed, distance, damage, knockback, death_knockback,
+// clip_size, max_ammo, reload_frames, noise_radius, bullet_count, spread
+static const tWeaponStats s_pWeaponStats[WEAPON_TYPE_COUNT] = {
+	{ 10,  6,  20,  40, 2, 3,  -1,  -1,   0,   0, 1, 0 }, // knife
+	{ 20, 16, 150,  30, 4, 5,  10,  50,  60, 250, 1, 0 }, // pistol
+	{ 60, 10, 100, 100, 8, 10,  2,  20,  80, 400, 3, 3 }, // shotgun
+	{100, 24, 400, 100, 6, 8,   4,  20, 100, 500, 1, 0 }, // sniper
+	{  8, 18, 110,  20, 3, 4,  30, 150,  70, 200, 1, 0 }, // uzi
+	{ 14, 14, 160,  50, 4, 5,  20, 100,  80, 300, 1, 0 }, // m16
+	{  6,  8, 100,  10, 4, 5,  50, 200, 120, 150, 2, 2 }, // flamethrower
+	{  4, 16, 160,  20, 3, 4, 100, 300, 150, 350, 1, 0 }, // minigun
+};
 
 static const char *s_pWeaponBitmapPaths[WEAPON_TYPE_COUNT] = {
 	"data/weapons/weapon_knife.bm",
@@ -70,7 +94,10 @@ static WORD s_wWeaponOffsetX;
 static WORD s_wWeaponOffsetY;
 static UWORD s_uwWeaponX;
 static UWORD s_uwWeaponY;
-static UBYTE s_ubShootCooldown;
+static UWORD s_uwShootCooldown;
+static UWORD s_uwReloadTimer;
+static WORD s_pAmmoInClip[WEAPON_TYPE_COUNT];
+static WORD s_pTotalAmmo[WEAPON_TYPE_COUNT];
 
 static UBYTE reverseByte(UBYTE ubValue) {
 	ubValue = ((ubValue & 0xF0) >> 4) | ((ubValue & 0x0F) << 4);
@@ -142,28 +169,96 @@ static void destroyWeaponGfx(tWeaponGfx *pGfx) {
 	*pGfx = (tWeaponGfx){0};
 }
 
-static void spawnBullet(WORD wDx, WORD wDy) {
-	if(s_ubShootCooldown) {
+static void initWeaponAmmo(void) {
+	for(UBYTE ubWeapon = 0; ubWeapon < WEAPON_TYPE_COUNT; ++ubWeapon) {
+		WORD wClipSize = s_pWeaponStats[ubWeapon].wClipSize;
+		if(wClipSize == -1) {
+			s_pAmmoInClip[ubWeapon] = -1;
+			s_pTotalAmmo[ubWeapon] = -1;
+		}
+		else {
+			s_pAmmoInClip[ubWeapon] = wClipSize;
+			s_pTotalAmmo[ubWeapon] = wClipSize * 3;
+		}
+	}
+}
+
+static void processReload(void) {
+	if(!s_uwReloadTimer) {
 		return;
 	}
 
+	--s_uwReloadTimer;
+	if(s_uwReloadTimer) {
+		return;
+	}
+
+	const tWeaponStats *pStats = &s_pWeaponStats[s_ubCurrentWeapon];
+	if(pStats->wClipSize == -1) {
+		return;
+	}
+
+	WORD wNeeded = pStats->wClipSize - s_pAmmoInClip[s_ubCurrentWeapon];
+	if(wNeeded <= 0) {
+		return;
+	}
+	if(s_pTotalAmmo[s_ubCurrentWeapon] >= wNeeded) {
+		s_pAmmoInClip[s_ubCurrentWeapon] += wNeeded;
+		s_pTotalAmmo[s_ubCurrentWeapon] -= wNeeded;
+	}
+	else {
+		s_pAmmoInClip[s_ubCurrentWeapon] += s_pTotalAmmo[s_ubCurrentWeapon];
+		s_pTotalAmmo[s_ubCurrentWeapon] = 0;
+	}
+}
+
+static void tryStartReload(void) {
+	const tWeaponStats *pStats = &s_pWeaponStats[s_ubCurrentWeapon];
+	if(s_uwReloadTimer || pStats->wClipSize == -1) {
+		return;
+	}
+	if(s_pAmmoInClip[s_ubCurrentWeapon] >= pStats->wClipSize || s_pTotalAmmo[s_ubCurrentWeapon] <= 0) {
+		return;
+	}
+	s_uwReloadTimer = pStats->uwReloadFrames;
+}
+
+static void spawnBullet(WORD wDx, WORD wDy) {
+	if(s_uwShootCooldown || s_uwReloadTimer) {
+		return;
+	}
+
+	const tWeaponStats *pStats = &s_pWeaponStats[s_ubCurrentWeapon];
+	if(pStats->wClipSize != -1) {
+		if(s_pAmmoInClip[s_ubCurrentWeapon] <= 0) {
+			return;
+		}
+		--s_pAmmoInClip[s_ubCurrentWeapon];
+	}
+
 	tBulletType eType = s_ubCurrentWeapon == WEAPON_FLAMETHROWER_TYPE ? BULLET_TYPE_FLAME : BULLET_TYPE_SMALL;
-	UWORD uwSpeed = eType == BULLET_TYPE_FLAME ? WEAPON_FLAME_SPEED : WEAPON_BULLET_SPEED;
-	UWORD uwMaxDistance = eType == BULLET_TYPE_FLAME ? WEAPON_FLAME_MAX_DISTANCE : WEAPON_BULLET_MAX_DISTANCE;
 	WORD wStartX = (WORD)s_uwWeaponX;
 	WORD wStartY = (WORD)s_uwWeaponY;
+	UBYTE ubBulletCount = pStats->ubBulletCount ? pStats->ubBulletCount : 1;
 
-	bulletSpawn(
-		BULLET_OWNER_PLAYER,
-		eType,
-		wStartX,
-		wStartY,
-		wDx,
-		wDy,
-		uwSpeed,
-		uwMaxDistance
-	);
-	s_ubShootCooldown = WEAPON_SHOOT_COOLDOWN_FRAMES;
+	for(UBYTE ubBullet = 0; ubBullet < ubBulletCount; ++ubBullet) {
+		WORD wOffset = (WORD)(2 * ubBullet) - (WORD)(ubBulletCount - 1);
+		WORD wSpreadDx = wDx + ((-wDy * wOffset * pStats->ubSpread) >> 4);
+		WORD wSpreadDy = wDy + (( wDx * wOffset * pStats->ubSpread) >> 4);
+
+		bulletSpawn(
+			BULLET_OWNER_PLAYER,
+			eType,
+			wStartX,
+			wStartY,
+			wSpreadDx,
+			wSpreadDy,
+			pStats->uwBulletSpeed,
+			pStats->uwBulletMaxDistance
+		);
+	}
+
+	s_uwShootCooldown = pStats->uwCooldownFrames;
 }
 
 static UBYTE findFirstLoadedWeapon(void) {
@@ -210,7 +305,9 @@ void weaponCreate(void) {
 	getWeaponFrame(s_ubCurrentWeapon, 0, &pFrame, &pMask);
 	bobInit(&s_sWeaponBob, WEAPON_FRAME_W, WEAPON_FRAME_H, 1, pFrame, pMask, 0, 0);
 	s_isBobReady = 1;
-	s_ubShootCooldown = 0;
+	s_uwShootCooldown = 0;
+	s_uwReloadTimer = 0;
+	initWeaponAmmo();
 }
 
 void weaponProcess(UWORD uwPlayerX, UWORD uwPlayerY, UWORD uwAimX, UWORD uwAimY) {
@@ -226,6 +323,11 @@ void weaponProcess(UWORD uwPlayerX, UWORD uwPlayerY, UWORD uwAimX, UWORD uwAimY)
 	else if(keyUse(KEY_6)) { weaponSetCurrent(5); }
 	else if(keyUse(KEY_7)) { weaponSetCurrent(6); }
 	else if(keyUse(KEY_8)) { weaponSetCurrent(7); }
+
+	processReload();
+	if(keyUse(KEY_R) || mouseUse(WEAPON_MOUSE_PORT, MOUSE_RMB)) {
+		tryStartReload();
+	}
 
 	WORD wPlayerViewX = (WORD)uwPlayerX - (WORD)scrollerGetCameraX() + PLAYER_HALF_W;
 	WORD wPlayerViewY = (WORD)uwPlayerY - (WORD)scrollerGetCameraY() + PLAYER_HALF_H;
@@ -248,8 +350,8 @@ void weaponProcess(UWORD uwPlayerX, UWORD uwPlayerY, UWORD uwAimX, UWORD uwAimY)
 	s_uwWeaponX = lWeaponX < 0 ? 0 : (UWORD)lWeaponX;
 	s_uwWeaponY = lWeaponY < 0 ? 0 : (UWORD)lWeaponY;
 
-	if(s_ubShootCooldown) {
-		--s_ubShootCooldown;
+	if(s_uwShootCooldown) {
+		--s_uwShootCooldown;
 	}
 	if(mouseCheck(WEAPON_MOUSE_PORT, MOUSE_LMB)) {
 		spawnBullet(wDx, wDy);
@@ -274,10 +376,12 @@ void weaponDestroy(void) {
 }
 
 void weaponSetCurrent(UBYTE ubWeaponType) {
-	if(ubWeaponType >= WEAPON_TYPE_COUNT || !s_pWeaponGfx[ubWeaponType].isLoaded) {
+	if(ubWeaponType >= WEAPON_TYPE_COUNT || !s_pWeaponGfx[ubWeaponType].isLoaded || ubWeaponType == s_ubCurrentWeapon) {
 		return;
 	}
 	s_ubCurrentWeapon = ubWeaponType;
+	s_uwReloadTimer = 0;
+	s_uwShootCooldown = WEAPON_SWITCH_COOLDOWN_FRAMES;
 }
 
 UBYTE weaponGetCurrent(void) {
