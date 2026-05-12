@@ -8,6 +8,16 @@
 
 extern tStateManager *stateMgr;
 
+static const LevelDefinition lakeLevels[] = {
+    {
+        "LAKE 1",
+        OBJECTIVE_KILL_ALL,
+        0,
+        "data/bitmaps/get_ready.bm",
+        "data/palettes/get_ready.plt"
+    },
+};
+
 static const LevelDefinition boulevardLevels[] = {
     {
         "BULWAR 1",
@@ -27,7 +37,16 @@ static const LevelDefinition boulevardLevels[] = {
 
 static const WorldDefinition worlds[] = {
     {
+        "LAKE",
+        WORLD_KIND_LAKE,
+        "data/tileset/lake.bm",
+        lakeLevels,
+        sizeof(lakeLevels) / sizeof(lakeLevels[0])
+    },
+    {
         "BULWAR",
+        WORLD_KIND_OUTDOOR,
+        "data/tileset/outdoor.bm",
         boulevardLevels,
         sizeof(boulevardLevels) / sizeof(boulevardLevels[0])
     },

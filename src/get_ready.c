@@ -76,6 +76,20 @@ static void loadGetReadyImage(void) {
     blitWait();
 }
 
+static void generateCurrentMap(void) {
+    const WorldDefinition *world = campaignGetCurrentWorld();
+
+    switch (world->kind) {
+        case WORLD_KIND_LAKE:
+            mapGeneratorGenerateLake();
+            break;
+        case WORLD_KIND_OUTDOOR:
+        default:
+            mapGeneratorGenerateOutdoor();
+            break;
+    }
+}
+
 static void getReadyCreate(void) {
     view = viewCreate(0,
         TAG_VIEW_GLOBAL_PALETTE, 1,
@@ -115,7 +129,7 @@ static void getReadyCreate(void) {
     viewLoad(view);
     fadePaletteLevel(GET_READY_BLACK_LEVEL, GET_READY_FULL_LEVEL);
     mapGeneratorSetSeed(0x19820827);
-    mapGeneratorGenerateOutdoor();
+    generateCurrentMap();
     fadePaletteLevel(GET_READY_FULL_LEVEL, GET_READY_BLACK_LEVEL);
     isFadedOut = 1;
     gamePrepare();

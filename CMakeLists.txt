@@ -124,6 +124,7 @@ set(AIM_SPRITE_PNG ${DATA_DIR}/sprites/aim_hw.png)
 set(AIM_SPRITE_PALETTE ${DATA_DIR}/sprites/aim.gpl)
 set(PLAYER_MASKED_PNG ${DATA_DIR}/player/player_masked.png)
 set(OUTDOOR_TILESET_COLUMN_PNG ${DATA_DIR}/tileset/outdoor_column.png)
+set(LAKE_TILESET_COLUMN_PNG ${DATA_DIR}/tileset/lake_column.png)
 set(WEAPON_NAMES knife gun shotgun sniper uzi m16 flamethrower minigun)
 set(BULLET_NAMES small flame)
 
@@ -377,6 +378,29 @@ addInterleavedBitmapAsset(
     ${GAME_PALETTE_SOURCE}
     ${OUTDOOR_TILESET_COLUMN_PNG}
     ${DATA_DIR}/tileset/outdoor.bm
+)
+
+add_custom_command(
+    OUTPUT ${LAKE_TILESET_COLUMN_PNG}
+    COMMAND ${PYTHON3_EXECUTABLE}
+        ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_tileset_column.py
+        --input ${RES_DIR}/tileset/lake.png
+        --output ${LAKE_TILESET_COLUMN_PNG}
+        --tile-width 16
+        --tile-height 16
+        --columns 14
+        --rows 8
+        --game-palette ${GAME_PALETTE_SOURCE}
+    DEPENDS
+        ${RES_DIR}/tileset/lake.png
+        ${GAME_PALETTE_SOURCE}
+        ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_tileset_column.py
+)
+
+addInterleavedBitmapAsset(
+    ${GAME_PALETTE_SOURCE}
+    ${LAKE_TILESET_COLUMN_PNG}
+    ${DATA_DIR}/tileset/lake.bm
 )
 
 getToolPath(font_conv TOOL_FONT_CONV)

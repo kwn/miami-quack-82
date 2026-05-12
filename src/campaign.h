@@ -27,6 +27,11 @@ typedef enum {
     LEVEL_RESULT_EXIT_TO_TITLE
 } LevelResult;
 
+typedef enum {
+    WORLD_KIND_OUTDOOR,
+    WORLD_KIND_LAKE
+} WorldKind;
+
 typedef struct {
     const char *name;
     ObjectiveKind objective;
@@ -37,6 +42,8 @@ typedef struct {
 
 typedef struct {
     const char *name;
+    WorldKind kind;
+    const char *tilesetPath;
     const LevelDefinition *levels;
     UBYTE levelCount;
 } WorldDefinition;

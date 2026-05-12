@@ -1,5 +1,6 @@
 #include "scroller.h"
 
+#include "campaign.h"
 #include "game.h"
 #include "map.h"
 
@@ -59,7 +60,7 @@ tVPort *scrollerCreate(tView *view) {
         TAG_DONE
     );
 
-    tileSet = bitmapCreateFromPath("data/tileset/outdoor.bm", 0);
+    tileSet = bitmapCreateFromPath(campaignGetCurrentWorld()->tilesetPath, 0);
 
     tileBuf = tileBufferCreate(0,
         TAG_TILEBUFFER_VPORT,               gameVport,
