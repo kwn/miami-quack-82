@@ -1,0 +1,151 @@
+Tileset with lake, water pollution, piers, water decorations.
+- two houses, doors facing down (visible) and up (invisible).
+- two pollution stains 3x3 tilesets. 1) water -> purple -> green (center) 2) green -> purple -> water (center) for building random stains
+- vertical and horizontal piers (planks horizontal and vertical)
+
+Treat coordinates as x,y, where x = column from the left, y = row from the top. The tileset is 14 × 8 tiles, each 16×16 px.
+
+0,0 - house with visible doors down, row 1/4, left
+1,0 - house with visible doors down, row 1/4, center
+2,0 - house with visible doors down, row 1/4, right
+3,0 - house with visible doors up, row 1/4, left
+4,0 - house with visible doors up, row 1/4, center
+5,0 - house with visible doors up, row 1/4, right
+6,0 - vertical wooden pier planks, left top section
+7,0 - vertical wooden pier planks, middle top section
+8,0 - vertical wooden pier planks, right top section
+9,0 - empty water/background tile
+10,0 - vertical wooden pier planks, middle top section, variation 1
+11,0 - vertical wooden pier planks, middle top section, variation 2
+12,0 - vertical wooden pier planks, middle top section, variation 3 with large dark damage
+13,0 - vertical wooden pier planks, right top section, variation 2 with dar damage
+
+0,1 - house with visible doors down, row 2/4, left
+1,1 - house with visible doors down, row 2/4, center
+2,1 - house with visible doors down, row 2/4, right
+3,1 - house with visible doors up, row 2/4, left
+4,1 - house with visible doors up, row 2/4, center
+5,1 - house with visible doors up, row 2/4, right
+6,1 - vertical wooden pier planks, left center section
+7,1 - vertical wooden pier planks, middle center section (most common one)
+8,1 - vertical wooden pier planks, right center section
+9,1 - empty water/background tile
+10,1 - vertical wooden pier planks, middle center section, variation 1
+11,1 - vertical wooden pier planks, middle center section, variation 2 with large dark damage
+12,1 - vertical wooden pier planks, middle center section, variation 3 with large dark damage
+13,1 - empty water/background tile
+
+0,2 - house with visible doors down, row 3/4, left
+1,2 - house with visible doors down, row 3/4, center
+2,2 - house with visible doors down, row 3/4, right
+3,2 - house with visible doors up, row 3/4, left
+4,2 - house with visible doors up, row 3/4, center
+5,2 - house with visible doors up, row 3/4, right
+6,2 - vertical wooden pier piles above water, left edge
+7,2 - vertical wooden pier piles above water, middle variant
+8,2 - vertical wooden pier piles above water, right edge
+9,2 - empty water/background tile
+10,2 - vertical wooden pier piles above water, right edge variant
+11,2 - vertical wooden pier piles above water, left edge variant
+12,2 - vertical wooden pier piles above water, middle variant
+13,2 - vertical wooden pier piles above water, middle variant
+
+0,3 - house with visible doors down, row 4/4, left
+1,3 - house with visible doors down, row 4/4, center, doors
+2,3 - house with visible doors down, row 4/4, right
+3,3 - house with visible doors up, row 4/4, left
+4,3 - house with visible doors up, row 4/4, center
+5,3 - house with visible doors up, row 4/4, right
+6,3 - horizontal planks pier, left pier edge
+7,3 - horizontal planks pier, middle pier
+8,3 - horizontal planks pier, right pier edge
+9,3 - empty water/background tile
+10,3 - horizontal planks pier, left pier edge damaged
+11,3 - horizontal planks pier, right pier edge damaged
+12,3 - empty water/background tile
+13,3 - empty water/background tile
+
+0,4 - empty water/background tile (the actual water)
+1,4 - small water decoration / tiny dark specks
+2,4 - small water decoration / larger dark speck
+3,4 - small water decoration / green reflection or algae
+4,4 - small water decoration / dark stain
+5,4 - water decoration / a lone piling
+6,4 - horizontal planks pier, left pier edge variant
+7,4 - horizontal planks pier, middle pier variant
+8,4 - horizontal planks pier, right pier edge variant
+9,4 - empty water/background tile
+10,4 - horizontal planks pier, left pier edge variant
+11,4 - horizontal planks pier, middle pier variant
+12,4 - horizontal planks pier, middle pier variant heavily damaged
+13,4 - horizontal planks pier, middle pier variant heavily damaged
+
+0,5 - pollution stain, water into purple stain, top left fragment, bottom right is green
+1,5 - pollution stain, water into purple stain, top fragment, bottom is green
+2,5 - pollution stain, water into purple stain, top right fragment, bottom left is green
+3,5 - pollution stain, green into purple stain, diagonal top left fragment, bottom/right has water
+4,5 - pollution stain, green into purple stain, top fragment, bottom left is water
+5,5 - pollution stain, green into purple stain, top right fragment, bottom left is water
+6,5 - horizontal wooden pier piles above water, variant with foam/vegetation
+7,5 - horizontal wooden pier piles above water, middle variant
+8,5 - horizontal wooden pier piles above water, right pier edge variant
+9,5 - empty water/background tile
+10,5 - empty water/background tile
+11,5 - empty water/background tile
+12,5 - empty water/background tile
+13,5 - empty water/background tile
+
+0,6 - pollution stain, water into purple stain, left fragment, right side is green
+1,6 - green ground, mostly clear green tile, small purple detail in center
+2,6 - pollution stain, purple center with green stain on left/top, water on right
+3,6 - pollution stain, purple center with green stain on left/top, water on right
+4,6 - water tile, mostly clear water
+5,6 - pollution stain, green into purple stain, right fragment, left side is water
+6,6 - shadow on the water for bottom of the house with doors facing up
+7,6 - shadow on the water for bottom of the house with doors facing up
+8,6 - empty water/background tile
+9,6 - empty water/background tile
+10,6 - empty water/background tile
+11,6 - empty water/background tile
+12,6 - empty water/background tile
+13,6 - empty water/background tile
+
+0,7 - pollution stain, water into purple stain, bottom left fragment, top right is green
+1,7 - pollution stain, water into purple stain, bottom fragment, top is green
+2,7 - pollution stain, water into purple stain, bottom right fragment, top left is green
+3,7 - pollution stain, green into purple stain, bottom left fragment, top/right has water
+4,7 - pollution stain, green into purple stain, bottom fragment, top left is water
+5,7 - pollution stain, green into purple stain, bottom right fragment, top left is water
+6,7 - empty water/background tile
+7,7 - empty water/background tile
+8,7 - empty water/background tile
+9,7 - empty water/background tile
+10,7 - empty water/background tile
+11,7 - empty water/background tile
+12,7 - empty water/background tile
+13,7 - empty water/background tile with character (don't use)
+
+Houses:
+- door facing down - 12 tiles - from 0,0 to 2,3
+- door facing up (invisible) - 12 tiles - from 3,0 to 5,3, when put directly on water it needs to have piles from the pier under
+
+Piers with vertical planks (piers going horizonally):
+- clean vertical planks: 6,0 7,0 8,0 (top edge) and 6,1 7,1 8,1 (center, could be expanded)
+- damaged variant: 10,0 11,0 12,0 13,0 and 10,1 11,1 12,1 (for randomness)
+- bottom/side edge near water with piles: 6,2 7,2 8,2 and 10,2 11,2 12,2 13,2
+
+Piers with horizonal planks (piers going vertically):
+- upper horizontal pier: 6,3 7,3 8,3 and 10,3 11,3
+- lower/damaged horizontal pier: 6,4 7,4 8,4 and 10,4 11,4 12,4 13,4
+
+Pollution / sludge:
+- larger stain pieces: area from 0,5 to 2,7 - clean water, through purple into green
+- larger stain pieces: area from 3,5 to 5,7 - green pollution, through purple into clean water
+- best used as 3×3 or irregular shapes built from these tiles
+
+Water decorations:
+- small specks/reflections: 1,4 2,4 3,4 4,4 5,4 (lone pile on the water)
+- shadows/dot rows: 6,6 7,6
+
+Empty water/background:
+- all tiles described as empty water/background tile

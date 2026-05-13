@@ -44,6 +44,7 @@ typedef struct {
     const char *name;
     WorldKind kind;
     const char *tilesetPath;
+    const char *palettePath;
     const LevelDefinition *levels;
     UBYTE levelCount;
 } WorldDefinition;

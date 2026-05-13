@@ -1,4 +1,5 @@
 #include "hud.h"
+#include "campaign.h"
 
 #include <ace/managers/blit.h>
 #include <ace/managers/viewport/simplebuffer.h>
@@ -9,10 +10,12 @@ static tVPort *hudVport;
 static tSimpleBufferManager *hudBuffer;
 
 static void loadPalette(void) {
+    const WorldDefinition *world = campaignGetCurrentWorld();
+
 #ifdef ACE_USE_AGA_FEATURES
-    paletteLoadFromPath("data/palettes/game.plt", (UWORD *)hudVport->pPalette, GAME_COLOR_COUNT);
+    paletteLoadFromPath(world->palettePath, (UWORD *)hudVport->pPalette, GAME_COLOR_COUNT);
 #else
-    paletteLoadFromPath("data/palettes/game.plt", hudVport->pPalette, GAME_COLOR_COUNT);
+    paletteLoadFromPath(world->palettePath, hudVport->pPalette, GAME_COLOR_COUNT);
 #endif
 }
 

@@ -40,6 +40,7 @@ static const WorldDefinition worlds[] = {
         "LAKE",
         WORLD_KIND_LAKE,
         "data/tileset/lake.bm",
+        "data/palettes/lake.plt",
         lakeLevels,
         sizeof(lakeLevels) / sizeof(lakeLevels[0])
     },
@@ -47,6 +48,7 @@ static const WorldDefinition worlds[] = {
         "BULWAR",
         WORLD_KIND_OUTDOOR,
         "data/tileset/outdoor.bm",
+        "data/palettes/outdoor.plt",
         boulevardLevels,
         sizeof(boulevardLevels) / sizeof(boulevardLevels[0])
     },

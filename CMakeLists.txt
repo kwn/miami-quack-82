@@ -119,12 +119,15 @@ set(RES_DIR ${CMAKE_CURRENT_LIST_DIR}/res)
 set(DATA_DIR ${CMAKE_CURRENT_BINARY_DIR}/data)
 set(BITMAPS_DIR ${RES_DIR}/bitmaps)
 set(PALETTES_DIR ${RES_DIR}/palettes)
-set(GAME_PALETTE_SOURCE ${RES_DIR}/palettes/game.gpl)
+set(DEFAULT_PALETTE_SOURCE ${PALETTES_DIR}/game.gpl)
 set(AIM_SPRITE_PNG ${DATA_DIR}/sprites/aim_hw.png)
 set(AIM_SPRITE_PALETTE ${DATA_DIR}/sprites/aim.gpl)
 set(PLAYER_MASKED_PNG ${DATA_DIR}/player/player_masked.png)
-set(OUTDOOR_TILESET_COLUMN_PNG ${DATA_DIR}/tileset/outdoor_column.png)
-set(LAKE_TILESET_COLUMN_PNG ${DATA_DIR}/tileset/lake_column.png)
+set(WORLD_NAMES outdoor lake)
+set(WORLD_TILESET_COLUMNS_outdoor 7)
+set(WORLD_TILESET_ROWS_outdoor 5)
+set(WORLD_TILESET_COLUMNS_lake 14)
+set(WORLD_TILESET_ROWS_lake 8)
 set(WEAPON_NAMES knife gun shotgun sniper uzi m16 flamethrower minigun)
 set(BULLET_NAMES small flame)
 
@@ -207,7 +210,7 @@ function(addBitmapResources BITMAP_SOURCE_DIR BITMAP_DESTINATION_DIR)
         set(BITMAP_PALETTE_SOURCE ${PALETTES_DIR}/${BITMAP_NAME}.gpl)
         set(BITMAP_CONVERSION_SOURCE ${BITMAP_SOURCE})
         if(NOT EXISTS ${BITMAP_PALETTE_SOURCE})
-            set(BITMAP_PALETTE_SOURCE ${GAME_PALETTE_SOURCE})
+            set(BITMAP_PALETTE_SOURCE ${DEFAULT_PALETTE_SOURCE})
             set(BITMAP_CONVERSION_SOURCE ${BITMAP_DESTINATION_DIR}/${BITMAP_NAME}.png)
             add_custom_command(
                 OUTPUT ${BITMAP_CONVERSION_SOURCE}
@@ -215,10 +218,10 @@ function(addBitmapResources BITMAP_SOURCE_DIR BITMAP_DESTINATION_DIR)
                     ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_game_palette_png.py
                     --input ${BITMAP_SOURCE}
                     --output ${BITMAP_CONVERSION_SOURCE}
-                    --game-palette ${GAME_PALETTE_SOURCE}
+                    --game-palette ${DEFAULT_PALETTE_SOURCE}
                 DEPENDS
                     ${BITMAP_SOURCE}
-                    ${GAME_PALETTE_SOURCE}
+                    ${DEFAULT_PALETTE_SOURCE}
                     ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_game_palette_png.py
             )
         endif()
@@ -238,6 +241,42 @@ function(addInterleavedBitmapAsset PALETTE_SOURCE BITMAP_SOURCE BITMAP_DESTINATI
         PALETTE ${PALETTE_SOURCE}
         SOURCES ${BITMAP_SOURCE}
         DESTINATIONS ${BITMAP_DESTINATION}
+    )
+endfunction()
+
+function(addWorldTilesetAsset WORLD_NAME TILESET_COLUMNS TILESET_ROWS)
+    set(WORLD_TILESET_SOURCE ${RES_DIR}/tileset/${WORLD_NAME}.png)
+    set(WORLD_PALETTE_SOURCE ${PALETTES_DIR}/${WORLD_NAME}.gpl)
+    set(WORLD_TILESET_COLUMN_PNG ${DATA_DIR}/tileset/${WORLD_NAME}_column.png)
+
+    if(NOT EXISTS "${WORLD_TILESET_SOURCE}")
+        message(FATAL_ERROR "Missing world tileset: ${WORLD_TILESET_SOURCE}")
+    endif()
+    if(NOT EXISTS "${WORLD_PALETTE_SOURCE}")
+        message(FATAL_ERROR "Missing world palette: ${WORLD_PALETTE_SOURCE}")
+    endif()
+
+    add_custom_command(
+        OUTPUT ${WORLD_TILESET_COLUMN_PNG}
+        COMMAND ${PYTHON3_EXECUTABLE}
+            ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_tileset_column.py
+            --input ${WORLD_TILESET_SOURCE}
+            --output ${WORLD_TILESET_COLUMN_PNG}
+            --tile-width 16
+            --tile-height 16
+            --columns ${TILESET_COLUMNS}
+            --rows ${TILESET_ROWS}
+            --game-palette ${WORLD_PALETTE_SOURCE}
+        DEPENDS
+            ${WORLD_TILESET_SOURCE}
+            ${WORLD_PALETTE_SOURCE}
+            ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_tileset_column.py
+    )
+
+    addInterleavedBitmapAsset(
+        ${WORLD_PALETTE_SOURCE}
+        ${WORLD_TILESET_COLUMN_PNG}
+        ${DATA_DIR}/tileset/${WORLD_NAME}.bm
     )
 endfunction()
 
@@ -285,15 +324,15 @@ add_custom_command(
         --output ${PLAYER_MASKED_PNG}
         --width 16
         --height 240
-        --game-palette ${GAME_PALETTE_SOURCE}
+        --game-palette ${DEFAULT_PALETTE_SOURCE}
     DEPENDS
         ${RES_DIR}/player/player.png
-        ${GAME_PALETTE_SOURCE}
+        ${DEFAULT_PALETTE_SOURCE}
         ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_masked_png.py
 )
 
 addMaskedInterleavedBitmapAsset(
-    ${GAME_PALETTE_SOURCE}
+    ${DEFAULT_PALETTE_SOURCE}
     ${PLAYER_MASKED_PNG}
     ${DATA_DIR}/player/player.bm
     ${DATA_DIR}/player/player_mask.bm
@@ -312,16 +351,16 @@ foreach(BULLET_NAME IN LISTS BULLET_NAMES)
                 --output ${BULLET_MASKED_PNG}
                 --width 16
                 --height 16
-                --game-palette ${GAME_PALETTE_SOURCE}
+                --game-palette ${DEFAULT_PALETTE_SOURCE}
                 --transparent-index 0
             DEPENDS
                 ${BULLET_SOURCE_PNG}
-                ${GAME_PALETTE_SOURCE}
+                ${DEFAULT_PALETTE_SOURCE}
                 ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_masked_png.py
         )
 
         addMaskedInterleavedBitmapAsset(
-            ${GAME_PALETTE_SOURCE}
+            ${DEFAULT_PALETTE_SOURCE}
             ${BULLET_MASKED_PNG}
             ${DATA_DIR}/bullets/bullet_${BULLET_NAME}.bm
             ${DATA_DIR}/bullets/bullet_${BULLET_NAME}_mask.bm
@@ -341,15 +380,15 @@ foreach(WEAPON_NAME IN LISTS WEAPON_NAMES)
                 --output ${WEAPON_MASKED_PNG}
                 --width 16
                 --height 144
-                --game-palette ${GAME_PALETTE_SOURCE}
+                --game-palette ${DEFAULT_PALETTE_SOURCE}
             DEPENDS
                 ${WEAPON_SOURCE_PNG}
-                ${GAME_PALETTE_SOURCE}
+                ${DEFAULT_PALETTE_SOURCE}
                 ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_masked_png.py
         )
 
         addMaskedInterleavedBitmapAsset(
-            ${GAME_PALETTE_SOURCE}
+            ${DEFAULT_PALETTE_SOURCE}
             ${WEAPON_MASKED_PNG}
             ${DATA_DIR}/weapons/weapon_${WEAPON_NAME}.bm
             ${DATA_DIR}/weapons/weapon_${WEAPON_NAME}_mask.bm
@@ -357,51 +396,13 @@ foreach(WEAPON_NAME IN LISTS WEAPON_NAMES)
     endif()
 endforeach()
 
-add_custom_command(
-    OUTPUT ${OUTDOOR_TILESET_COLUMN_PNG}
-    COMMAND ${PYTHON3_EXECUTABLE}
-        ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_tileset_column.py
-        --input ${RES_DIR}/tileset/outdoor.png
-        --output ${OUTDOOR_TILESET_COLUMN_PNG}
-        --tile-width 16
-        --tile-height 16
-        --columns 7
-        --rows 5
-        --game-palette ${GAME_PALETTE_SOURCE}
-    DEPENDS
-        ${RES_DIR}/tileset/outdoor.png
-        ${GAME_PALETTE_SOURCE}
-        ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_tileset_column.py
-)
-
-addInterleavedBitmapAsset(
-    ${GAME_PALETTE_SOURCE}
-    ${OUTDOOR_TILESET_COLUMN_PNG}
-    ${DATA_DIR}/tileset/outdoor.bm
-)
-
-add_custom_command(
-    OUTPUT ${LAKE_TILESET_COLUMN_PNG}
-    COMMAND ${PYTHON3_EXECUTABLE}
-        ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_tileset_column.py
-        --input ${RES_DIR}/tileset/lake.png
-        --output ${LAKE_TILESET_COLUMN_PNG}
-        --tile-width 16
-        --tile-height 16
-        --columns 14
-        --rows 8
-        --game-palette ${GAME_PALETTE_SOURCE}
-    DEPENDS
-        ${RES_DIR}/tileset/lake.png
-        ${GAME_PALETTE_SOURCE}
-        ${CMAKE_CURRENT_LIST_DIR}/cmake/prepare_tileset_column.py
-)
-
-addInterleavedBitmapAsset(
-    ${GAME_PALETTE_SOURCE}
-    ${LAKE_TILESET_COLUMN_PNG}
-    ${DATA_DIR}/tileset/lake.bm
-)
+foreach(WORLD_NAME IN LISTS WORLD_NAMES)
+    addWorldTilesetAsset(
+        ${WORLD_NAME}
+        ${WORLD_TILESET_COLUMNS_${WORLD_NAME}}
+        ${WORLD_TILESET_ROWS_${WORLD_NAME}}
+    )
+endforeach()
 
 getToolPath(font_conv TOOL_FONT_CONV)
 add_custom_command(
