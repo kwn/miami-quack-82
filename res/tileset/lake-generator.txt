@@ -1,0 +1,54 @@
+Generator mapy "Lake" — opis algorytmu
+
+  1. Woda wszędzie
+
+  Zaczynamy od pustej mapy — same kafelki wody. 128x128 jezioro.
+
+  2. Punkty zainteresowania
+
+  Losujemy 8-14 punktów na mapie z przyzwoitym odstępem między nimi (min ~20 kafelków). Każdy punkt to albo plac (otwarta arena do walki, ~8-12 kafelków na bok) albo domek (3x4 kafelki,
+   spawn wrogów). Mniej więcej pół na pół, z gwarancją minimum 3 domków.
+
+  3. Sieć pomostów
+
+  Łączymy te punkty pomostami. Najpierw gwarantujemy że z każdego punktu da się dojść do każdego (drzewo rozpinające). Potem dorzucamy kilka dodatkowych połączeń (~30% więcej) żeby mapa
+   nie była jedną linią — żeby były alternatywne drogi i pętle, ale nie za dużo.
+
+  Każdy pomost to kształt L (raz skręt) albo prosta linia. Szerokość 3-5 kafelków, losowana per pomost. Tylko pion i poziom, bez diagonali — bo tileset ma osobne deski pionowe i
+  poziome.
+
+  4. Kafelkowanie pomostów
+
+  Mapa w tym momencie ma informację "tu jest pomost, tu jest woda". Teraz zamieniamy to na właściwe kafelki:
+  - Środek pomostu → deski (z losowymi wariantami uszkodzeń, ~15% szans)
+  - Krawędzie → kafelki brzegowe z palami widocznymi nad wodą
+  - Na skrzyżowaniach i narożnikach — dopasowanie na podstawie sąsiadów (autotiling)
+
+  5. Domki
+
+  Stawiamy domki na wyznaczonych punktach. Drzwi zawsze w stronę pomostu. Domki z drzwiami do góry (niewidocznymi) dostają pale pod spodem i cienie na wodzie.
+
+  6. Plamy zanieczyszczeń
+
+  3-5 plam rozrzuconych po mapie, min 3 kafelki od pomostów. Każda plama to kilka nachodzących na siebie okręgów — daje to nieregularne, organiczne kształty, nie kwadratowe bloby.
+  Rozmiar od mniejszych (5x5) do sporych (10x12).
+
+  Krawędzie plam autotilowane lewym zestawem kafelków (woda → fiolet → zieleń w środku). W większych plamach opcjonalnie wycinamy oczka czystej wody — te autotilowane prawym zestawem
+  (zieleń → fiolet → czysta woda w środku).
+
+  Plamy muszą być dobrze widoczne z pomostów — to centralny motyw gry.
+
+  7. Dekoracje wody
+
+  Na ~2-3% kafelków wody losowe drobne ozdoby: plamki, algi, odbicia, rzadko samotny pal. Nie bezpośrednio przy pomoście.
+
+  ---
+  Parametry do strojenia
+
+  - Ile punktów na mapie — gęstość mapy (8 = spacerowa, 14 = gęsta sieć)
+  - Proporcja placów do domków — więcej placów = więcej aren, więcej domków = więcej spawnu wrogów
+  - Szerokość pomostów — cieńsze (3) = bardziej klaustrofobiczne, grubsze (5) = więcej miejsca na uniki
+  - Ile dodatkowych połączeń — mało = liniowa mapa, dużo = dużo alternatywnych dróg
+  - Ile i jak duże plamy — intensywność zanieczyszczenia wizualnie
+  - Szansa na uszkodzone deski — klimat zniszczenia/zaniedbania
+  - Gęstość dekoracji wody — jak "żywe" jest jezioro
