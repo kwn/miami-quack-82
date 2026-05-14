@@ -129,14 +129,20 @@ Houses:
 - door facing down - 12 tiles - from 0,0 to 2,3
 - door facing up (invisible) - 12 tiles - from 3,0 to 5,3, when put directly on water it needs to have piles from the pier under
 
-Piers with vertical planks (piers going horizonally):
-- clean vertical planks: 6,0 7,0 8,0 (top edge) and 6,1 7,1 8,1 (center, could be expanded)
-- damaged variant: 10,0 11,0 12,0 13,0 and 10,1 11,1 12,1 (for randomness)
-- bottom/side edge near water with piles: 6,2 7,2 8,2 and 10,2 11,2 12,2 13,2
+Piers with vertical planks (for piers running horizontally / east-west):
+  Base 3x3 grid at columns 6-8, rows 0-2:
+  - row 0: top (north) edge of pier. col 6=left edge, col 7=center (repeatable), col 8=right edge
+  - row 1: center section (repeatable north-south). col 6=left edge, col 7=center, col 8=right edge
+  - row 2: bottom (south) edge with piles visible above water. col 6=left edge, col 7=center, col 8=right edge
+  Damaged/variation tiles: 10,0 11,0 12,0 13,0 (top row variants) and 10,1 11,1 12,1 (center variants)
+  Pile variants: 10,2 11,2 12,2 13,2
 
-Piers with horizonal planks (piers going vertically):
-- upper horizontal pier: 6,3 7,3 8,3 and 10,3 11,3
-- lower/damaged horizontal pier: 6,4 7,4 8,4 and 10,4 11,4 12,4 13,4
+Piers with horizontal planks (for piers running vertically / north-south, and for large plazas):
+  Base 3x3 grid at columns 6-8, rows 3-5:
+  - row 3: top (north) edge of pier. col 6=left edge, col 7=center (repeatable), col 8=right edge
+  - row 4: center section (repeatable north-south). col 6=left edge, col 7=center, col 8=right edge
+  - row 5: bottom (south) edge with piles visible above water. col 6=left edge, col 7=center, col 8=right edge
+  Damaged/variation tiles: 10,3 11,3 (top row variants) and 10,4 11,4 12,4 13,4 (center variants)
 
 Pollution / sludge:
 - larger stain pieces: area from 0,5 to 2,7 - clean water, through purple into green
