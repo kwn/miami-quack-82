@@ -95,6 +95,79 @@ static void placePiles(void) {
     }
 }
 
+static int isAllWater(int x0, int y0, int w, int h) {
+    int cx, cy;
+    for (cy = 0; cy < h; ++cy) {
+        for (cx = 0; cx < w; ++cx) {
+            int mx = x0 + cx;
+            int my = y0 + cy;
+            if (mx < 0 || mx >= MAP_W || my < 0 || my >= MAP_H) return 0;
+            if (mapData[my * MAP_W + mx] != TILE_WATER) return 0;
+        }
+    }
+    return 1;
+}
+
+static int countNonWater(int x0, int y, int w) {
+    int count = 0;
+    int cx;
+    for (cx = 0; cx < w; ++cx) {
+        int mx = x0 + cx;
+        if (mx < 0 || mx >= MAP_W || y < 0 || y >= MAP_H) continue;
+        if (mapData[y * MAP_W + mx] != TILE_WATER) ++count;
+    }
+    return count;
+}
+
+static void placeHouseDown(int hx, int hy) {
+    int row, col;
+    for (row = 0; row < 4; ++row) {
+        for (col = 0; col < 3; ++col) {
+            mapData[(hy + row) * MAP_W + hx + col] =
+                (UBYTE)(row * LAKE_TILESET_W + col);
+        }
+    }
+}
+
+static void placeHouseUp(int hx, int hy) {
+    int row, col;
+    for (row = 0; row < 4; ++row) {
+        for (col = 0; col < 3; ++col) {
+            mapData[(hy + row) * MAP_W + hx + col] =
+                (UBYTE)(row * LAKE_TILESET_W + 3 + col);
+        }
+    }
+    mapData[(hy + 4) * MAP_W + hx] = (UBYTE)(2 * LAKE_TILESET_W + 6);
+    mapData[(hy + 4) * MAP_W + hx + 1] = (UBYTE)(2 * LAKE_TILESET_W + 7);
+    mapData[(hy + 4) * MAP_W + hx + 2] = (UBYTE)(2 * LAKE_TILESET_W + 8);
+}
+
+static void placeHouses(void) {
+    for (int i = 0; i < nodeCount; ++i) {
+        int px = nodeX[i] - nodeW[i] / 2;
+        int py = nodeY[i] - nodeH[i] / 2;
+        int pw = nodeW[i];
+        int ph = nodeH[i];
+        int hx, hy;
+
+        if (pw < 5) continue;
+
+        hx = px + mapGeneratorRandRange(1, pw - 3);
+        hy = py + ph;
+        if (hx + 2 < MAP_W && hy + 4 < MAP_H && isAllWater(hx, hy + 1, 3, 4)) {
+            placeHouseUp(hx, hy);
+        }
+
+        if (mapGeneratorRandRange(0, 3) == 0) {
+            hx = px + mapGeneratorRandRange(1, pw - 3);
+            hy = py - 4;
+            if (hx + 2 < MAP_W && hy >= 0 && isAllWater(hx, hy, 3, 4)) {
+                placeHouseDown(hx, hy);
+            }
+        }
+    }
+}
+
 static int distBetween(int a, int b) {
     int dx = nodeX[a] - nodeX[b];
     int dy = nodeY[a] - nodeY[b];
@@ -104,7 +177,7 @@ static int distBetween(int a, int b) {
 }
 
 static void generateNodes(void) {
-    int targetCount = mapGeneratorRandRange(12, 18);
+    int targetCount = mapGeneratorRandRange(10, 14);
     int candidateW, candidateH;
     nodeCount = 0;
 
@@ -112,13 +185,8 @@ static void generateNodes(void) {
         int x = mapGeneratorRandRange(MAP_MARGIN, MAP_W - MAP_MARGIN);
         int y = mapGeneratorRandRange(MAP_MARGIN, MAP_H - MAP_MARGIN);
 
-        if (nodeCount < (targetCount * 2) / 3) {
-            candidateW = mapGeneratorRandRange(10, 16);
-            candidateH = mapGeneratorRandRange(10, 16);
-        } else {
-            candidateW = 3;
-            candidateH = 4;
-        }
+        candidateW = mapGeneratorRandRange(10, 16);
+        candidateH = mapGeneratorRandRange(10, 16);
 
         int tooClose = 0;
         for (int i = 0; i < nodeCount; ++i) {
@@ -141,12 +209,7 @@ static void generateNodes(void) {
         nodeY[nodeCount] = y;
         nodeW[nodeCount] = candidateW;
         nodeH[nodeCount] = candidateH;
-
-        if (nodeCount < (targetCount * 2) / 3) {
-            nodeType[nodeCount] = NODE_PLAZA;
-        } else {
-            nodeType[nodeCount] = NODE_HOUSE;
-        }
+        nodeType[nodeCount] = NODE_PLAZA;
 
         ++nodeCount;
     }
@@ -299,12 +362,10 @@ void mapGeneratorGenerateLake(void) {
 
     // Phase 4: draw plazas as pier + plaza flags
     for (int i = 0; i < nodeCount; ++i) {
-        if (nodeType[i] == NODE_PLAZA) {
-            fillRect(
-                nodeX[i] - nodeW[i] / 2, nodeY[i] - nodeH[i] / 2,
-                nodeW[i], nodeH[i], PIER_FLAG | PLAZA_FLAG
-            );
-        }
+        fillRect(
+            nodeX[i] - nodeW[i] / 2, nodeY[i] - nodeH[i] / 2,
+            nodeW[i], nodeH[i], PIER_FLAG | PLAZA_FLAG
+        );
     }
 
     // Phase 5: draw pier connections
@@ -332,4 +393,7 @@ void mapGeneratorGenerateLake(void) {
     for (UWORD i = 0; i < MAP_W * MAP_H; ++i) {
         mapData[i] &= ~PIER_FLAG;
     }
+
+    // Phase 9: place houses
+    placeHouses();
 }
